@@ -1,4 +1,4 @@
-package me.flaming.h0rsescript
+package me.flaming.h0rsescript.tokens
 
 enum class TokenType {
     IDENTIFIER,    // Variable or function names

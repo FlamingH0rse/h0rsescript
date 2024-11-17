@@ -1,7 +1,7 @@
-package me.flaming.h0rsescript
+package me.flaming.h0rsescript.tokens
 
+import me.flaming.h0rsescript.ErrorHandler
 import me.flaming.h0rsescript.error.InvalidTokenError
-import kotlin.system.exitProcess
 
 object Tokenizer {
     private const val keywordPrefixPattern = """\$"""
@@ -10,7 +10,7 @@ object Tokenizer {
 
     // Follows priority of matching
     private val tokenPatterns = mapOf(
-        TokenType.KEYWORD to keywords.joinToString("|") { k -> "${keywordPrefixPattern}$k" },
+        TokenType.KEYWORD to keywords.joinToString("|") { k -> "$keywordPrefixPattern$k" },
         TokenType.BOOLEAN to """true|false|TRUE|FALSE""",
         TokenType.NUMBER to """\d+(\.\d+)*""",
         TokenType.STRING to """"([^"\\]|\\.)*"""",
@@ -46,7 +46,7 @@ object Tokenizer {
                 if (match != null && match.range.first == position) {
                     // Add token to list
                     val value = match.value
-                    val matchToken = Token(type, value, position)
+                    val matchToken = Token(type, value, Pair(line, linePosition), position)
                     tokens.add(matchToken)
 
                     // Update line position
