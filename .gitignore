@@ -130,8 +130,7 @@ hs_err_pid*
 # Cache of project
 .gradletasknamecache
 
-# Testing files
-test.hs
+# Testing and concept files
+*.hs
 test.js
-main.hs
 hs.txt
