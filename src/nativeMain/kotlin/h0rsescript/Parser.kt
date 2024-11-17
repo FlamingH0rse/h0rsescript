@@ -24,9 +24,11 @@ object Parser {
                 currentToken()?.type == TokenType.IDENTIFIER -> {
                     if (nextToken()?.type == TokenType.OPEN_BRACKET) {
                         nodes.add(getFunctionCallNode())
+                        continue
                     }
                     if (nextToken()?.type == TokenType.SYMBOL) {
                         nodes.add(getAssignmentNode())
+                        continue
                     }
                     else {
                         // Throw UnexpectedTokenError
