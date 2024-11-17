@@ -4,7 +4,10 @@ import me.flaming.h0rsescript.syntax.AssignmentNode
 import me.flaming.h0rsescript.SyntaxTrees.FunctionCallNode
 import me.flaming.h0rsescript.SyntaxTrees.IdentifierNode
 import me.flaming.h0rsescript.SyntaxTrees.LiteralNode
+import me.flaming.h0rsescript.error.UnexpectedTokenError
 import me.flaming.h0rsescript.syntax.ASTNode
+import me.flaming.h0rsescript.tokens.Token
+import me.flaming.h0rsescript.tokens.TokenType
 import kotlin.system.exitProcess
 
 object Parser {
@@ -21,21 +24,18 @@ object Parser {
                 currentToken()?.type == TokenType.IDENTIFIER -> {
                     if (nextToken()?.type == TokenType.OPEN_BRACKET) {
                         nodes.add(getFunctionCallNode())
-                        println("Added func call node")
                     }
                     if (nextToken()?.type == TokenType.SYMBOL) {
                         nodes.add(getAssignmentNode())
                     }
                     else {
                         // Throw UnexpectedTokenError
-                        println("Unexpected Token lil bro")
-                        exitProcess(1)
+                        ErrorHandler.report(UnexpectedTokenError(currentToken(), TokenType.OPEN_BRACKET, TokenType.SYMBOL))
                     }
                 }
                 else -> {
                     // Throw UnexpectedTokenError
-                    println("Unexpected Token lil bro")
-                    exitProcess(1)
+                    ErrorHandler.report(UnexpectedTokenError(currentToken(), TokenType.IDENTIFIER, TokenType.KEYWORD))
                 }
             }
         }
@@ -62,7 +62,7 @@ object Parser {
                 TokenType.STRING -> LiteralNode(arg.value, LiteralNode.LiteralType.STRING)
                 TokenType.NUMBER -> LiteralNode(arg.value, LiteralNode.LiteralType.NUMBER)
                 TokenType.BOOLEAN -> LiteralNode(arg.value, LiteralNode.LiteralType.BOOLEAN)
-                else -> IdentifierNode("") // Shouldn't happen lol
+                else -> IdentifierNode("IF_YOU_READ_THIS_YOU_MESSED_UP") // Shouldn't happen lol
             }
             arguments.add(argNode)
         }
@@ -90,9 +90,9 @@ object Parser {
             return current
         }
 
-        // Throw syntax error
-        println("Syntax Error: at position ${currentToken()?.position}")
-        exitProcess(1)
+        // Throw UnexpectedTokenError
+        ErrorHandler.report(UnexpectedTokenError(current, *types))
+        return Token()
     }
 
     private fun currentToken(): Token? = tokens.getOrNull(pos)

@@ -1,6 +1,7 @@
 package me.flaming.h0rsescript
 
-import kotlin.system.exitProcess
+import me.flaming.h0rsescript.tokens.TokenType
+import me.flaming.h0rsescript.tokens.Tokenizer
 
 class Interpreter(private val rawContent: String) {
     fun run() {
