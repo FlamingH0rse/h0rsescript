@@ -15,8 +15,8 @@ object Tokenizer {
         TokenType.NUMBER to """\d+(\.\d+)*""",
         TokenType.STRING to """"([^"\\]|\\.)*"""",
 
-        TokenType.IDENTIFIER to """[a-zA-Z0-9_]+""",
-        TokenType.SYMBOL to symbols.joinToString("|"),
+        TokenType.IDENTIFIER to """[a-zA-Z_][a-zA-Z0-9_]+""",
+        TokenType.ASSIGNMENT_OPERATOR to symbols.joinToString("|"),
 
 
         TokenType.OPEN_BRACKET to """\[""",
