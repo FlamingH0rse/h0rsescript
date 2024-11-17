@@ -8,7 +8,6 @@ import me.flaming.h0rsescript.error.UnexpectedTokenError
 import me.flaming.h0rsescript.syntax.ASTNode
 import me.flaming.h0rsescript.tokens.Token
 import me.flaming.h0rsescript.tokens.TokenType
-import kotlin.system.exitProcess
 
 object Parser {
     private val nodes: MutableList<ASTNode> = mutableListOf()
@@ -26,13 +25,13 @@ object Parser {
                         nodes.add(getFunctionCallNode())
                         continue
                     }
-                    if (nextToken()?.type == TokenType.SYMBOL) {
+                    if (nextToken()?.type == TokenType.ASSIGNMENT_OPERATOR) {
                         nodes.add(getAssignmentNode())
                         continue
                     }
                     else {
                         // Throw UnexpectedTokenError
-                        ErrorHandler.report(UnexpectedTokenError(currentToken(), TokenType.OPEN_BRACKET, TokenType.SYMBOL))
+                        ErrorHandler.report(UnexpectedTokenError(nextToken(), TokenType.OPEN_BRACKET, TokenType.ASSIGNMENT_OPERATOR))
                     }
                 }
                 else -> {
@@ -76,7 +75,7 @@ object Parser {
     }
     private fun getAssignmentNode(): AssignmentNode {
         val name = checkAndGet(TokenType.IDENTIFIER)
-        val lockedAssignment = checkAndGet(TokenType.SYMBOL).value == "<->"
+        val lockedAssignment = checkAndGet(TokenType.ASSIGNMENT_OPERATOR).value == "<->"
 
         val value = getFunctionCallNode()
 
