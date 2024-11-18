@@ -23,13 +23,14 @@ fun main(args: Array<String>) {
 
         }
     } else {
+        val options = getOptions(args)
         val fileName = args[0]
         val filePath = fileName.toPath()
 
         val fileContent = readFileContent(filePath)
 
         // Run interpreter
-        val hsProgram = Interpreter(fileContent)
+        val hsProgram = Interpreter(fileContent, options)
         hsProgram.run()
     }
 }
@@ -45,4 +46,16 @@ private fun readFileContent(filePath: Path) : String {
 
         exitProcess(1)
     }
+}
+
+private fun getOptions(args: Array<String>): Map<String, List<String>> {
+    val options: MutableMap<String, List<String>> = mutableMapOf()
+    for (arg in args) {
+        val KV = arg.split('=')
+        if (KV.size != 2 || !KV[0].startsWith("--")) continue
+        val key = KV[0].removePrefix("--")
+        val values = KV[1].split(',')
+        options[key] = values
+    }
+    return options
 }

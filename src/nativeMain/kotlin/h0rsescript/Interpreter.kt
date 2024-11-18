@@ -3,7 +3,7 @@ package me.flaming.h0rsescript
 import me.flaming.h0rsescript.tokens.TokenType
 import me.flaming.h0rsescript.tokens.Tokenizer
 
-class Interpreter(private val rawContent: String) {
+class Interpreter(private val rawContent: String, val options: Map<String, List<String>> = mapOf()) {
     fun run() {
         var tokens = Tokenizer.tokenize(rawContent)
         // Remove whitespaces and comments
@@ -11,7 +11,8 @@ class Interpreter(private val rawContent: String) {
 
         println(tokens.map { t -> t.value })
 
-        Parser.parse(tokens)
+        val nodes = Parser.parse(tokens, options["parser-options"] ?: listOf())
+        println(nodes)
     }
 
 }
