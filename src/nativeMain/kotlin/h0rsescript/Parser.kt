@@ -63,22 +63,22 @@ object Parser {
         // KEYWORD, IDENTIFIER, BODY, KEYWORD
         checkAndGet(TokenType.KEYWORD)
         val name = checkAndGet(TokenType.IDENTIFIER)
-        val options: MutableMap<IdentifierNode, List<IdentifierNode>> = mutableMapOf()
+        val options: MutableMap<String, List<String>> = mutableMapOf()
 
         while (currentToken()?.type == TokenType.KEYWORD && currentToken()?.value != "\$define") {
             val key = checkAndGet(TokenType.KEYWORD)
-            val values: MutableList<IdentifierNode> = mutableListOf()
+            val values: MutableList<String> = mutableListOf()
 
 
             var caughtValues = false
             while(!caughtValues) {
                 val value: String = checkAndGet(TokenType.IDENTIFIER).value
-                values.add(IdentifierNode(value))
+                values.add(value)
 
                 if (currentToken()?.type == TokenType.COMMA) checkAndGet(TokenType.COMMA)
                 else caughtValues = true
             }
-            options[IdentifierNode(key.value)] = values
+            options[key.value] = values
         }
 
         val body: MutableList<ASTNode> = mutableListOf()
@@ -89,7 +89,7 @@ object Parser {
         checkAndGet(TokenType.KEYWORD, optionalValue = "\$end")
 
         if ("log-function-defines" in Parser.options) println("${name.value} $options\n   $body")
-        return FunctionDefNode(IdentifierNode(name.value), options, body)
+        return FunctionDefNode(name.value, options, body)
     }
     private fun getFunctionCallNode(): FunctionCallNode {
         // IDENTIFIER, OPEN_BRACKET, ...IDENTIFIER/STRING/NUMBER/BOOLEAN, CLOSE_BRACKET
@@ -119,7 +119,7 @@ object Parser {
         checkAndGet(TokenType.CLOSE_BRACKET)
 
 
-        return FunctionCallNode(IdentifierNode(name.value), arguments.toList())
+        return FunctionCallNode(name.value, arguments.toList())
     }
     private fun getAssignmentNode(): AssignmentNode {
         val name = checkAndGet(TokenType.IDENTIFIER)
@@ -127,7 +127,7 @@ object Parser {
 
         val value = getFunctionCallNode()
 
-        return AssignmentNode(IdentifierNode(name.value), value, lockedAssignment)
+        return AssignmentNode(name.value, value, lockedAssignment)
     }
 
 
