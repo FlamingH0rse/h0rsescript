@@ -14,9 +14,11 @@ object Parser {
     private val nodes: MutableList<ASTNode> = mutableListOf()
     private var pos = 0
     private var tokens: List<Token> = listOf()
+    private var options: List<String> = listOf()
 
-    fun parse(tokens: List<Token>): List<ASTNode> {
+    fun parse(tokens: List<Token>, options: List<String>): List<ASTNode> {
         this.tokens = tokens
+        this.options = options
 
         while (pos < tokens.size) {
             val parsedStatement = parseStatement()
@@ -63,31 +65,30 @@ object Parser {
         val name = checkAndGet(TokenType.IDENTIFIER)
         val options: MutableMap<IdentifierNode, List<IdentifierNode>> = mutableMapOf()
 
-        while (currentToken()?.type == TokenType.KEYWORD) {
+        while (currentToken()?.type == TokenType.KEYWORD && currentToken()?.value != "\$define") {
             val key = checkAndGet(TokenType.KEYWORD)
             val values: MutableList<IdentifierNode> = mutableListOf()
 
-            if (key.value == "\$define") nodes.add(getFunctionDefNode())
-            else {
-                var caughtValues = false
-                while(!caughtValues) {
-                    val value: String = checkAndGet(TokenType.IDENTIFIER).value
-                    values.add(IdentifierNode(value))
 
-                    if (currentToken()?.type == TokenType.COMMA) checkAndGet(TokenType.COMMA)
-                    else caughtValues = true
-                }
+            var caughtValues = false
+            while(!caughtValues) {
+                val value: String = checkAndGet(TokenType.IDENTIFIER).value
+                values.add(IdentifierNode(value))
+
+                if (currentToken()?.type == TokenType.COMMA) checkAndGet(TokenType.COMMA)
+                else caughtValues = true
             }
             options[IdentifierNode(key.value)] = values
         }
 
         val body: MutableList<ASTNode> = mutableListOf()
-        while (currentToken()?.type != TokenType.KEYWORD && currentToken()?.value != "\$end") {
+        while (currentToken()?.value != "\$end") {
             val statement = parseStatement()
             body.add(statement)
         }
         checkAndGet(TokenType.KEYWORD, optionalValue = "\$end")
 
+        if ("log-function-defines" in Parser.options) println("${name.value} $options\n   $body")
         return FunctionDefNode(IdentifierNode(name.value), options, body)
     }
     private fun getFunctionCallNode(): FunctionCallNode {
@@ -114,7 +115,7 @@ object Parser {
             }
             arguments.add(argNode)
         }
-        println(arguments)
+        if ("log-function-calls" in options) println("${name.value} $arguments")
         checkAndGet(TokenType.CLOSE_BRACKET)
 
 
@@ -131,7 +132,7 @@ object Parser {
 
 
     private fun checkAndGet(vararg types: TokenType, optionalValue: String? = null): Token {
-        println(currentToken()?.type)
+        if ("log-tokens" in options) println(currentToken()?.type)
         val current = currentToken()
         if (current != null && current.type in types) {
             if (optionalValue != null && current.value != optionalValue) {
