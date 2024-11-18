@@ -2,6 +2,7 @@ package me.flaming.h0rsescript
 
 import me.flaming.h0rsescript.syntax.AssignmentNode
 import me.flaming.h0rsescript.SyntaxTrees.FunctionCallNode
+import me.flaming.h0rsescript.SyntaxTrees.FunctionDefNode
 import me.flaming.h0rsescript.SyntaxTrees.IdentifierNode
 import me.flaming.h0rsescript.SyntaxTrees.LiteralNode
 import me.flaming.h0rsescript.error.UnexpectedTokenError
@@ -18,31 +19,77 @@ object Parser {
         this.tokens = tokens
 
         while (pos < tokens.size) {
-
-            when {
-                currentToken()?.type == TokenType.IDENTIFIER -> {
-                    if (nextToken()?.type == TokenType.OPEN_BRACKET) {
-                        nodes.add(getFunctionCallNode())
-                        continue
-                    }
-                    if (nextToken()?.type == TokenType.ASSIGNMENT_OPERATOR) {
-                        nodes.add(getAssignmentNode())
-                        continue
-                    }
-                    else {
-                        // Throw UnexpectedTokenError
-                        ErrorHandler.report(UnexpectedTokenError(nextToken(), TokenType.OPEN_BRACKET, TokenType.ASSIGNMENT_OPERATOR))
-                    }
-                }
-                else -> {
-                    // Throw UnexpectedTokenError
-                    ErrorHandler.report(UnexpectedTokenError(currentToken(), TokenType.IDENTIFIER, TokenType.KEYWORD))
-                }
-            }
+            val parsedStatement = parseStatement()
+            nodes.add(parsedStatement)
         }
         return nodes
     }
 
+    private fun parseStatement(): ASTNode {
+        return when (currentToken()?.type) {
+            TokenType.IDENTIFIER -> {
+                when (nextToken()?.type) {
+                    // Parse function call
+                    TokenType.OPEN_BRACKET -> getFunctionCallNode()
+
+                    // Parse assignment to a variable
+                    TokenType.ASSIGNMENT_OPERATOR -> getAssignmentNode()
+
+                    else -> {
+                        // Throw UnexpectedTokenError
+                        ErrorHandler.report(UnexpectedTokenError(nextToken(), TokenType.OPEN_BRACKET, TokenType.ASSIGNMENT_OPERATOR))
+                    }
+                }
+            }
+            TokenType.KEYWORD -> {
+                return when (currentToken()?.value) {
+                    "\$define" -> getFunctionDefNode()
+                    else -> {
+                        // Throw UnexpectedTokenError
+                        val error = UnexpectedTokenError(currentToken(), TokenType.OPEN_BRACKET, TokenType.ASSIGNMENT_OPERATOR, expectedValue = "\$define")
+                        error.message += "\nThis keyword must be enclosed within a \$define scope"
+                        ErrorHandler.report(error)
+                    }
+                }
+            }
+            else -> {
+                ErrorHandler.report(UnexpectedTokenError(currentToken(), TokenType.IDENTIFIER, TokenType.KEYWORD))
+            }
+        }
+    }
+    private fun getFunctionDefNode(): FunctionDefNode {
+        // KEYWORD, IDENTIFIER, BODY, KEYWORD
+        checkAndGet(TokenType.KEYWORD)
+        val name = checkAndGet(TokenType.IDENTIFIER)
+        val options: MutableMap<IdentifierNode, List<IdentifierNode>> = mutableMapOf()
+
+        while (currentToken()?.type == TokenType.KEYWORD) {
+            val key = checkAndGet(TokenType.KEYWORD)
+            val values: MutableList<IdentifierNode> = mutableListOf()
+
+            if (key.value == "\$define") nodes.add(getFunctionDefNode())
+            else {
+                var caughtValues = false
+                while(!caughtValues) {
+                    val value: String = checkAndGet(TokenType.IDENTIFIER).value
+                    values.add(IdentifierNode(value))
+
+                    if (currentToken()?.type == TokenType.COMMA) checkAndGet(TokenType.COMMA)
+                    else caughtValues = true
+                }
+            }
+            options[IdentifierNode(key.value)] = values
+        }
+
+        val body: MutableList<ASTNode> = mutableListOf()
+        while (currentToken()?.type != TokenType.KEYWORD && currentToken()?.value != "\$end") {
+            val statement = parseStatement()
+            body.add(statement)
+        }
+        checkAndGet(TokenType.KEYWORD, optionalValue = "\$end")
+
+        return FunctionDefNode(IdentifierNode(name.value), options, body)
+    }
     private fun getFunctionCallNode(): FunctionCallNode {
         // IDENTIFIER, OPEN_BRACKET, ...IDENTIFIER/STRING/NUMBER/BOOLEAN, CLOSE_BRACKET
 
@@ -83,17 +130,20 @@ object Parser {
     }
 
 
-    private fun checkAndGet(vararg types: TokenType): Token {
+    private fun checkAndGet(vararg types: TokenType, optionalValue: String? = null): Token {
         println(currentToken()?.type)
         val current = currentToken()
         if (current != null && current.type in types) {
+            if (optionalValue != null && current.value != optionalValue) {
+                // Throw UnexpectedTokenError
+                ErrorHandler.report(UnexpectedTokenError(current, *types, expectedValue = optionalValue))
+            }
             pos++
             return current
         }
 
         // Throw UnexpectedTokenError
         ErrorHandler.report(UnexpectedTokenError(current, *types))
-        return Token()
     }
 
     private fun currentToken(): Token? = tokens.getOrNull(pos)
