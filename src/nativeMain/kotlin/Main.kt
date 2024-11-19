@@ -8,7 +8,7 @@ import okio.Path.Companion.toPath
 import kotlin.system.exitProcess
 
 const val LANG_NAME = "h0rsescript"
-const val VERSION = "1.0.0"
+const val VERSION = "0.1.0"
 
 fun main(args: Array<String>) {
     if (args.isEmpty()) {
@@ -23,14 +23,17 @@ fun main(args: Array<String>) {
 
         }
     } else {
-        val options = getOptions(args)
         val fileName = args[0]
         val filePath = fileName.toPath()
 
+        // Read file content
         val fileContent = readFileContent(filePath)
 
+        // Parse CLI arguments
+        val arguments = parseArguments(args)
+
         // Run interpreter
-        val hsProgram = Interpreter(fileContent, options)
+        val hsProgram = Interpreter(fileContent, arguments.options, arguments.flags, arguments.programArgs)
         hsProgram.run()
     }
 }
@@ -48,14 +51,27 @@ private fun readFileContent(filePath: Path) : String {
     }
 }
 
-private fun getOptions(args: Array<String>): Map<String, List<String>> {
-    val options: MutableMap<String, List<String>> = mutableMapOf()
+data class Arguments(val options: Map<String, List<String>>, val flags: List<String>, val programArgs: List<String>)
+
+private fun parseArguments(args: Array<String>): Arguments {
+    val options = mutableMapOf<String, List<String>>()
+    val flags = mutableListOf<String>()
+    val programArgs = mutableListOf<String>()
+
     for (arg in args) {
-        val KV = arg.split('=')
-        if (KV.size != 2 || !KV[0].startsWith("--")) continue
-        val key = KV[0].removePrefix("--")
-        val values = KV[1].split(',')
-        options[key] = values
+        val keyValue = arg.split('=')
+        // Parse program options (--option=value1,value2)
+        if (keyValue.size == 2 && keyValue[0].startsWith("--")) {
+            val key = keyValue[0].removePrefix("--")
+            val values = keyValue[1].split(',')
+            options[key] = values
+        }
+        // Parse program flags (-G, -D, -GA, etc.)
+        else if (arg.startsWith("-")) {
+            flags.add(arg.removePrefix("-"))
+        }
+        // Parse program arguments
+        else programArgs.add(arg)
     }
-    return options
+    return Arguments(options, flags, programArgs)
 }
