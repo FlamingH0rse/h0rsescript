@@ -65,7 +65,7 @@ Variables are declared using 1 of 5 `Assignment Operators`, and the `data` metho
 ```py
 my_number -> data [652.03]                          # NUM type
 my_string -> data ["Hello World"]                   # STR type
-# my_boolean -> data [true]                           # BOOL type
+my_boolean -> data [true]                           # BOOL type
 my_array -> data [ {1, 3, "PLUH", TRUE, false} ]    # ARR type
 
 myConstant <-> data ["password123"]
@@ -96,12 +96,12 @@ Internally, the function just returns the value passed to it. `fun data(x) = x`
 
 #### **Conditionals**
 ```py
-$define myFunction
+$define my_function
     print ["my_number is greater than 10"]
 $end
 
-moreThanTen -> conditionals.moreThan [my_number, 10]
-conditionals.run [moreThanTen, myFunction]
+more_than_ten -> conditionals.more_than [my_number, 10]
+conditionals.run [more_than_ten, my_function]
 ```
 
 #### **Loops**
