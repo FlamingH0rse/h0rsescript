@@ -65,7 +65,7 @@ object Parser {
         val name = checkAndGet(TokenType.IDENTIFIER)
         val options: MutableMap<String, List<String>> = mutableMapOf()
 
-        while (currentToken()?.type == TokenType.KEYWORD && currentToken()?.value != "\$define") {
+        while (currentToken()?.type == TokenType.KEYWORD && currentToken()?.value != "\$define" && currentToken()?.value != "\$end") {
             val key = checkAndGet(TokenType.KEYWORD)
             val values: MutableList<String> = mutableListOf()
 
@@ -123,11 +123,18 @@ object Parser {
     }
     private fun getAssignmentNode(): AssignmentNode {
         val name = checkAndGet(TokenType.IDENTIFIER)
-        val lockedAssignment = checkAndGet(TokenType.ASSIGNMENT_OPERATOR).value == "<->"
+        val assignmentOperator = checkAndGet(TokenType.ASSIGNMENT_OPERATOR).value
+        val assignmentType = when (assignmentOperator) {
+            "->" -> AssignmentNode.AssignmentType.VARIABLE
+            "<->" -> AssignmentNode.AssignmentType.CONSTANT
+            ">" -> AssignmentNode.AssignmentType.EDIT
+            // Should be unreachable
+            else -> AssignmentNode.AssignmentType.VARIABLE
+        }
 
         val value = getFunctionCallNode()
 
-        return AssignmentNode(name.value, value, lockedAssignment)
+        return AssignmentNode(name.value, value, assignmentType)
     }
 
 
