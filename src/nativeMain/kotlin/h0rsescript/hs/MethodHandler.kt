@@ -4,7 +4,8 @@ import me.flaming.h0rsescript.Interpreter
 
 object MethodHandler {
     private val methods = mapOf<String, (List<Any?>) -> Any?>(
-        "data" to { args -> args[0]}
+        "data" to { args -> args[0] },
+        "print" to { args -> println(args[0]) }
     )
     fun exists(name: String): Boolean {
         return name in methods
