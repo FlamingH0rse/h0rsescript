@@ -1,9 +1,7 @@
-package me.flaming.h0rsescript.SyntaxTrees
-
-import me.flaming.h0rsescript.syntax.ASTNode
+package me.flaming.h0rsescript.syntax
 
 data class LiteralNode (val rawValue: String, val type: LiteralType): ASTNode {
-    val escapeSequences = mapOf(
+    private val escapeSequences = mapOf(
         "\\\\" to "\\",
         "\\n" to "\n",
         "\\t" to "\t",
@@ -15,7 +13,7 @@ data class LiteralNode (val rawValue: String, val type: LiteralType): ASTNode {
         STRING, NUMBER, BOOLEAN
     }
     val value = when (type) {
-        LiteralType.STRING -> unescape(rawValue)
+        LiteralType.STRING -> unescape(rawValue).trim('"')
         LiteralType.NUMBER -> rawValue.toDouble()
         LiteralType.BOOLEAN -> rawValue.lowercase().toBooleanStrict()
     }
