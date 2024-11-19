@@ -6,7 +6,7 @@ import me.flaming.h0rsescript.error.InvalidTokenError
 object Tokenizer {
     private const val keywordPrefixPattern = """\$"""
     private val keywords = listOf("define", "end", "parameters", "return", "mode")
-    private val symbols = listOf("->", "<->")
+    private val symbols = listOf("->", "<->", ">")
 
     // Follows priority of matching
     private val tokenPatterns = mapOf(
