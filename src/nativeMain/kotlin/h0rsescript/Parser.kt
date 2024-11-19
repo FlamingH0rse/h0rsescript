@@ -1,10 +1,10 @@
 package me.flaming.h0rsescript
 
 import me.flaming.h0rsescript.syntax.AssignmentNode
-import me.flaming.h0rsescript.SyntaxTrees.FunctionCallNode
-import me.flaming.h0rsescript.SyntaxTrees.FunctionDefNode
-import me.flaming.h0rsescript.SyntaxTrees.IdentifierNode
-import me.flaming.h0rsescript.SyntaxTrees.LiteralNode
+import me.flaming.h0rsescript.syntax.FunctionCallNode
+import me.flaming.h0rsescript.syntax.FunctionDefNode
+import me.flaming.h0rsescript.syntax.IdentifierNode
+import me.flaming.h0rsescript.syntax.LiteralNode
 import me.flaming.h0rsescript.error.UnexpectedTokenError
 import me.flaming.h0rsescript.syntax.ASTNode
 import me.flaming.h0rsescript.tokens.Token
@@ -78,7 +78,7 @@ object Parser {
                 if (currentToken()?.type == TokenType.COMMA) checkAndGet(TokenType.COMMA)
                 else caughtValues = true
             }
-            options[key.value] = values
+            options[key.value.removePrefix("\$")] = values
         }
 
         val body: MutableList<ASTNode> = mutableListOf()
