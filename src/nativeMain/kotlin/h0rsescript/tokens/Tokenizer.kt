@@ -33,20 +33,22 @@ object Tokenizer {
         val tokens: MutableList<Token> = mutableListOf()
 
         var line = 1
-        var linePosition = 0
+        var column = 0
         var position = 0
 
         while (position < input.length) {
             var matched = false
 
+            // Check for all pattern matches
             for ((type, pattern) in tokenPatterns) {
                 val regex = Regex(pattern)
                 val match = regex.find(input, position)
 
+                // Check if match exists at current position
                 if (match != null && match.range.first == position) {
                     // Add token to list
                     val value = match.value
-                    val matchToken = Token(type, value, Pair(line, linePosition), position)
+                    val matchToken = Token(type, value, Pair(line, column), position)
                     tokens.add(matchToken)
 
                     // Update line position
@@ -55,11 +57,12 @@ object Tokenizer {
                         val lastNewLineIndex = newLines.last().range.last
 
                         line += newLines.count()
-                        linePosition = value.substring(lastNewLineIndex).length
+                        column = value.substring(lastNewLineIndex).length
                     }
                     // Update absolute position
                     position += match.value.length
 
+                    // Move to next position
                     matched = true
                     break
                 }
@@ -67,7 +70,7 @@ object Tokenizer {
 
             if (!matched) {
                 // Throw InvalidTokenError
-                ErrorHandler.report(InvalidTokenError(input[position], line, linePosition))
+                ErrorHandler.report(InvalidTokenError(input[position], line, column))
             }
         }
 
