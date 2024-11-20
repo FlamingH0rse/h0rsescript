@@ -1,7 +1,12 @@
 package me.flaming.h0rsescript.syntax
 
-data class AssignmentNode(val name: String, val value: ASTNode, val assignmentType: AssignmentType): ASTNode {
+data class AssignmentNode(
+    var name: String,
+    var assignmentType: AssignmentType,
+    var value: ASTNode = FunctionCallNode("data",listOf(IdentifierNode("null"))),
+    var values: List<ASTNode> = listOf()
+): ASTNode {
     enum class AssignmentType {
-        VARIABLE, CONSTANT, EDIT
+        VARIABLE, CONSTANT, EDIT, EMPTY, DELETE
     }
 }
