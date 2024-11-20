@@ -16,6 +16,7 @@
     - [Error Handling](#error-handling)
     - [Input/Output](#inputoutput)
 - [Modes](#modes)
+- [Examples](#examples)
 - [History](#history)
 - [Contributing](#contributions)
 - [License](#license)
