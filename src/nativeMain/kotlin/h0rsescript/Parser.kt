@@ -29,6 +29,14 @@ object Parser {
 
     private fun parseStatement(): ASTNode {
         return when (currentToken()?.type) {
+            TokenType.ASSIGNMENT_OPERATOR -> {
+                // Parse < and <- operations
+                if (currentToken()?.value == "<" || currentToken()?.value == "<-") {
+                    return getAssignmentNode()
+                }
+                // Throw UnexpectedTokenError
+                ErrorHandler.report(UnexpectedTokenError(currentToken(), TokenType.IDENTIFIER, TokenType.KEYWORD))
+            }
             TokenType.IDENTIFIER -> {
                 when (nextToken()?.type) {
                     // Parse function call
@@ -122,19 +130,43 @@ object Parser {
         return FunctionCallNode(name.value, arguments.toList())
     }
     private fun getAssignmentNode(): AssignmentNode {
-        val name = checkAndGet(TokenType.IDENTIFIER)
-        val assignmentOperator = checkAndGet(TokenType.ASSIGNMENT_OPERATOR).value
-        val assignmentType = when (assignmentOperator) {
-            "->" -> AssignmentNode.AssignmentType.VARIABLE
-            "<->" -> AssignmentNode.AssignmentType.CONSTANT
-            ">" -> AssignmentNode.AssignmentType.EDIT
-            // Should be unreachable
-            else -> AssignmentNode.AssignmentType.VARIABLE
+        val assignmentTypes = mapOf(
+            "->" to AssignmentNode.AssignmentType.VARIABLE,
+            ">" to AssignmentNode.AssignmentType.EDIT,
+            "<->" to AssignmentNode.AssignmentType.CONSTANT,
+            "<" to AssignmentNode.AssignmentType.EMPTY,
+            "<-" to AssignmentNode.AssignmentType.DELETE,
+        )
+
+        var name = Token()
+        // >, -> and <-> assignments
+        if (currentToken()?.type != TokenType.ASSIGNMENT_OPERATOR) {
+            name = checkAndGet(TokenType.IDENTIFIER)
         }
+        val assignmentOperator = checkAndGet(TokenType.ASSIGNMENT_OPERATOR).value
+        val assignmentType = assignmentTypes[assignmentOperator] ?: AssignmentNode.AssignmentType.VARIABLE
 
-        val value = getFunctionCallNode()
+        // EMPTY and DELETE operations
+        // SYNTAX: Operator, Identifier, Comma, Identifier, Comma, ...
+        if (assignmentType == AssignmentNode.AssignmentType.EMPTY || assignmentType == AssignmentNode.AssignmentType.DELETE) {
+            val values = mutableListOf<ASTNode>()
+            var caughtValues = false
+            while(!caughtValues) {
+                val token = checkAndGet(TokenType.IDENTIFIER)
+                values.add(IdentifierNode(token.value))
 
-        return AssignmentNode(name.value, value, assignmentType)
+                if (currentToken()?.type == TokenType.COMMA) checkAndGet(TokenType.COMMA)
+                else caughtValues = true
+            }
+
+            return AssignmentNode(name.value, assignmentType, values = values)
+        }
+        // VARIABLE, CONSTANT and EDIT operations
+        // SYNTAX: Identifier, Operator, Function Call
+        else {
+            val value = getFunctionCallNode()
+            return AssignmentNode(name.value, assignmentType, value)
+        }
     }
 
 
