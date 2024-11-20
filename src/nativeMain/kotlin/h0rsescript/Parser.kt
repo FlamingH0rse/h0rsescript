@@ -51,6 +51,16 @@ object Parser {
                     }
                 }
             }
+            TokenType.QUALIFIED_IDENTIFIER -> {
+                when (nextToken()?.type) {
+                    // Parse function call
+                    TokenType.OPEN_BRACKET -> getFunctionCallNode()
+                    else -> {
+                        // Throw UnexpectedTokenError
+                        ErrorHandler.report(UnexpectedTokenError(nextToken(), TokenType.OPEN_BRACKET))
+                    }
+                }
+            }
             TokenType.KEYWORD -> {
                 return when (currentToken()?.value) {
                     "\$define" -> getFunctionDefNode()
@@ -103,7 +113,7 @@ object Parser {
         // IDENTIFIER, OPEN_BRACKET, ...IDENTIFIER/STRING/NUMBER/BOOLEAN, CLOSE_BRACKET
 
         // Get function name
-        val name = checkAndGet(TokenType.IDENTIFIER)
+        val name = checkAndGet(TokenType.QUALIFIED_IDENTIFIER)
 
         checkAndGet(TokenType.OPEN_BRACKET)
         val arguments: MutableList<ASTNode> = mutableListOf()
