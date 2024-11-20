@@ -10,12 +10,12 @@ data class LiteralNode (val rawValue: String, val type: LiteralType): ASTNode {
         "\\\"" to "\""
     )
     enum class LiteralType {
-        STRING, NUMBER, BOOLEAN
+        STR, NUM, BOOL
     }
     val value = when (type) {
-        LiteralType.STRING -> unescape(rawValue).trim('"')
-        LiteralType.NUMBER -> rawValue.toDouble()
-        LiteralType.BOOLEAN -> rawValue.lowercase().toBooleanStrict()
+        LiteralType.STR -> unescape(rawValue).trim('"')
+        LiteralType.NUM -> rawValue.toDouble()
+        LiteralType.BOOL -> rawValue.lowercase().toBooleanStrict()
     }
     private fun unescape(str: String): String {
         var unescapedStr = str

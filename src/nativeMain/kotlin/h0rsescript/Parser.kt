@@ -116,9 +116,9 @@ object Parser {
 
             val argNode: ASTNode = when (arg.type) {
                 TokenType.IDENTIFIER -> IdentifierNode(arg.value)
-                TokenType.STRING -> LiteralNode(arg.value, LiteralNode.LiteralType.STRING)
-                TokenType.NUMBER -> LiteralNode(arg.value, LiteralNode.LiteralType.NUMBER)
-                TokenType.BOOLEAN -> LiteralNode(arg.value, LiteralNode.LiteralType.BOOLEAN)
+                TokenType.STRING -> LiteralNode(arg.value, LiteralNode.LiteralType.STR)
+                TokenType.NUMBER -> LiteralNode(arg.value, LiteralNode.LiteralType.NUM)
+                TokenType.BOOLEAN -> LiteralNode(arg.value, LiteralNode.LiteralType.BOOL)
                 else -> IdentifierNode("IF_YOU_READ_THIS_YOU_MESSED_UP") // Shouldn't happen lol
             }
             arguments.add(argNode)
