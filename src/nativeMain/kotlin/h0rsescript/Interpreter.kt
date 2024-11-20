@@ -45,21 +45,22 @@ class Interpreter(
         nodes.forEach { evaluateNode(it) }
     }
 
-    private fun evaluateNode(node: ASTNode): Any? {
+    private fun evaluateNode(node: ASTNode): HSType? {
         return when (node) {
-            is LiteralNode -> node.value
+            is LiteralNode -> HSType.from(node.value)
 
+            // Throws ReferenceError
             is IdentifierNode -> {
                 val ref = node.name
 
                 // Pre-defined identifiers
-                if (ref == "null") return null
+                if (ref == "null") return HSType.NULL()
 
                 // Gets variable from last available scope
                 val foundVar = getFromLastScope(ref)
                 if (foundVar != null) return foundVar.value
 
-                // Throw reference error if not found
+                // Throw ReferenceError if not found
                 ErrorHandler.report(ReferenceError(ref))
             }
 
@@ -89,15 +90,12 @@ class Interpreter(
         }
     }
 
-    private fun evaluateAssignmentNode(node: AssignmentNode) {
+    private fun evaluateAssignmentNode(node: AssignmentNode): HSType? {
         println("Assigning...")
         val variableName = node.name
-        val variableValue = evaluateNode(node.value)
+        val variableValue = evaluateNode(node.value) ?: HSType.NULL()
 
-        val type = when (node.assignmentType) {
-            AssignmentNode.AssignmentType.CONSTANT -> VariableType.CONSTANT
-            else -> VariableType.VARIABLE
-        }
+        val isConstant = node.assignmentType == AssignmentNode.AssignmentType.CONSTANT
 
         val error = IllegalAssignmentError(variableName)
 
@@ -129,7 +127,7 @@ class Interpreter(
                 }
 
                 // Throws IllegalAssignmentError if assignment to constant or function
-                if (foundVar.type == VariableType.CONSTANT || foundVar.type == VariableType.FUNCTION) {
+                if (foundVar.isConstant) {
                     error.message += "\nCannot edit or empty a constant or a function"
                     ErrorHandler.report(error)
                 }
@@ -145,15 +143,16 @@ class Interpreter(
                     ErrorHandler.report(error)
                 }
 
-                currentScope().add(Variable(variableName, type, variableValue))
+                currentScope().add(Variable(variableName, variableValue, isConstant))
             }
         }
         println(scopes)
+        return null
     }
 
-    private fun evaluateFunctionCallNode(node: FunctionCallNode): Any? {
+    private fun evaluateFunctionCallNode(node: FunctionCallNode): HSType {
         val functionName = node.name
-        val arguments = node.arguments.map { evaluateNode(it) }
+        val arguments = node.arguments.map { evaluateNode(it) ?: HSType.NULL() }
 
         val error = ReferenceError(functionName)
 
@@ -172,28 +171,34 @@ class Interpreter(
         }
 
         // Throw ReferenceError if non-runnable function
-        if (foundFunction.type != VariableType.FUNCTION) {
+        if (foundFunction.value !is HSType.FUN) {
             error.message += "\n'$functionName' is not a valid function name"
             ErrorHandler.report(error)
         }
 
-        // Get function options
-        val options = (foundFunction.value as Pair<*, *>).first as Map<*, *>
-        val body = (foundFunction.value as Pair<*, *>).second as List<*>
+        val functionInfo = foundFunction.value as HSType.FUN
 
-        // Create a local scope
-        val parameters = options["parameters"] as List<*>? ?: listOf<String>()
-        val functionScope = parameters.zip(arguments) { k, v -> Variable(k as String, VariableType.VARIABLE, v)}
+        // Get function options
+        val options = functionInfo.options
+        val body = functionInfo.body
+
+        // Create a local scope ($parameters)
+        val parameters = options["parameters"] ?: listOf()
+        val functionScope = parameters.zip(arguments) { k, v -> Variable(k, v)}
         scopes.add(functionScope.toMutableList())
 
+        // Create a method handler using the namespaces provided
+        val include = options["include"] ?: listOf()
+        MethodHandler(include)
+
         // Execute the function
-        body.forEach { evaluateNode(it as ASTNode) }
+        body.forEach { evaluateNode(it) }
 
         // Remove local scope after execution
         scopes.removeLast()
 
         // Return the output of the function
-        return null
+        return HSType.NULL()
     }
 
     // Gets from the last available scope (checks all scopes, until it finds it)
