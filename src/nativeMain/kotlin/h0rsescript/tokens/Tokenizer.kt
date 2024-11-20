@@ -69,7 +69,10 @@ object Tokenizer {
 
                         line += newLines.count()
                         column = value.substring(lastNewLineIndex).length
+                    } else {
+                        column += value.length
                     }
+
                     // Update absolute position
                     position += match.value.length
 
