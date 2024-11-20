@@ -17,7 +17,7 @@
     - [Input/Output](#inputoutput)
 - [Modes](#modes)
 - [History](#history)
-- [Contributing](#contributing)
+- [Contributing](#contributions)
 - [License](#license)
 
 ---
@@ -68,7 +68,7 @@ my_string -> data ["Hello World"]                   # STR type
 my_boolean -> data [true]                           # BOOL type
 my_array -> data [ {1, 3, "PLUH", TRUE, false} ]    # ARR type
 
-myConstant <-> data ["password123"]
+my_constant <-> data ["password123"]
 
 my_string > data ["Goodbye World"]
 
@@ -80,13 +80,13 @@ print [my_boolean] # Prints null
 print [my_string]  # Throws ReferenceError
 ```
 #### Assignment Operators
-|SYMBOL |TYPE 
-| :---: | :---:
-|   >   | EDIT
-|   ->  | VARIABLE
-|  <->  | CONSTANT
-|  <-   | DELETE
-|   <   | EMPTY
+| SYMBOL |   TYPE   |
+|:------:|:--------:|
+|   >    |   EDIT   |
+|   ->   | VARIABLE |
+|  <->   | CONSTANT |
+|   <-   |  DELETE  |
+|   <    |  EMPTY   |
 
 Internally, the function just returns the value passed to it. `fun data(x) = x`
 
