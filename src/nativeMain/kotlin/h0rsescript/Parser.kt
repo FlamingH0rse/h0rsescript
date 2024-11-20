@@ -113,7 +113,7 @@ object Parser {
         // IDENTIFIER, OPEN_BRACKET, ...IDENTIFIER/STRING/NUMBER/BOOLEAN, CLOSE_BRACKET
 
         // Get function name
-        val name = checkAndGet(TokenType.QUALIFIED_IDENTIFIER)
+        val name = checkAndGet(TokenType.QUALIFIED_IDENTIFIER, TokenType.IDENTIFIER)
 
         checkAndGet(TokenType.OPEN_BRACKET)
         val arguments: MutableList<ASTNode> = mutableListOf()
