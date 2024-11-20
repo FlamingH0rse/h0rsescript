@@ -39,7 +39,9 @@ class Interpreter(
 
         // Adds Global scope to scopes
         val variables = mutableListOf<Variable>()
+        val globalHandler = MethodHandler(listOf())
         scopes.add(variables)
+        handlerScopes.add(globalHandler)
         nodes.forEach { evaluateNode(it) }
     }
 
