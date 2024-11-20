@@ -16,6 +16,8 @@ object Tokenizer {
         TokenType.STRING to """"([^"\\]|\\.)*"""",
 
         TokenType.QUALIFIED_IDENTIFIER to """[a-zA-Z_][a-zA-Z0-9_.]*[a-zA-Z0-9_]""",
+
+        // Separate check for this in tokenize()
         TokenType.IDENTIFIER to """[a-zA-Z_][a-zA-Z0-9_]+""",
 
         TokenType.ASSIGNMENT_OPERATOR to symbols.joinToString("|"),
@@ -50,7 +52,14 @@ object Tokenizer {
                 if (match != null && match.range.first == position) {
                     // Add token to list
                     val value = match.value
-                    val matchToken = Token(type, value, Pair(line, column), position)
+
+                    // Check if match is a normal IDENTIFIER, and change it to that
+                    val matchToken =
+                        if (type == TokenType.QUALIFIED_IDENTIFIER && !value.contains('.'))
+                            Token(TokenType.IDENTIFIER, value, Pair(line, column), position)
+                        else
+                            Token(type, value, Pair(line, column), position)
+
                     tokens.add(matchToken)
 
                     // Update line position
