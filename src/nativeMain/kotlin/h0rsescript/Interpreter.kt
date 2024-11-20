@@ -1,14 +1,10 @@
 package me.flaming.h0rsescript
 
-import me.flaming.h0rsescript.syntax.FunctionCallNode
-import me.flaming.h0rsescript.syntax.FunctionDefNode
-import me.flaming.h0rsescript.syntax.IdentifierNode
-import me.flaming.h0rsescript.syntax.LiteralNode
 import me.flaming.h0rsescript.error.IllegalAssignmentError
 import me.flaming.h0rsescript.error.ReferenceError
+import me.flaming.h0rsescript.hs.HSType
 import me.flaming.h0rsescript.hs.MethodHandler
-import me.flaming.h0rsescript.syntax.ASTNode
-import me.flaming.h0rsescript.syntax.AssignmentNode
+import me.flaming.h0rsescript.syntax.*
 import me.flaming.h0rsescript.tokens.TokenType
 import me.flaming.h0rsescript.tokens.Tokenizer
 
@@ -67,19 +63,7 @@ class Interpreter(
             // Throws IllegalAssignmentError
             is AssignmentNode -> evaluateAssignmentNode(node)
 
-            is FunctionCallNode -> {
-                val functionName = node.name
-                val arguments = node.arguments.map { evaluateNode(it) }
-
-                val error = ReferenceError(functionName)
-
-                // Check for pre-existing methods
-                if (MethodHandler.exists(functionName)) {
-                    val functionOutput = MethodHandler.execute(functionName, arguments)
-                    return functionOutput
-                }
-                else return evaluateFunctionCallNode(node)
-            }
+            is FunctionCallNode -> evaluateFunctionCallNode(node)
 
             // Throws IllegalAssignmentError
             is FunctionDefNode -> {
@@ -95,7 +79,8 @@ class Interpreter(
                     error.message += "\nA variable with that name already exists"
                     ErrorHandler.report(error)
                 }
-                currentScope().add(Variable(functionName, VariableType.FUNCTION, Pair(options, body)))
+                currentScope().add(Variable(functionName, HSType.FUN(functionName, options, body), true))
+                return null
             }
             else -> null
         }
@@ -172,8 +157,16 @@ class Interpreter(
         // Check user-defined functions
         val foundFunction = getFromLastScope(functionName)
 
-        // Throw ReferenceError if not found
-        if (foundFunction == null) ErrorHandler.report(error)
+        // Check for pre-existing methods
+        if (foundFunction == null) {
+            if (MethodHandler.exists(functionName)) {
+                val handler = MethodHandler.getLastHandler(functionName)!!
+                return handler.execute(functionName, arguments)
+            } else {
+                // Throw ReferenceError if not found
+                ErrorHandler.report(error)
+            }
+        }
 
         // Throw ReferenceError if non-runnable function
         if (foundFunction.type != VariableType.FUNCTION) {
