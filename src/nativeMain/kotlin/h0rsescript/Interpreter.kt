@@ -20,8 +20,7 @@ class Interpreter(
 ) {
 
     // Variable class
-    data class Variable(val name: String, val type: VariableType, var value: Any?)
-    enum class VariableType { VARIABLE, CONSTANT, FUNCTION }
+    data class Variable(val name: String, var value: HSType, var isConstant: Boolean = false)
 
 
     private val scopes = mutableListOf<MutableList<Variable>>()
