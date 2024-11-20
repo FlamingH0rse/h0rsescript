@@ -116,7 +116,7 @@ $parameters my_array
     # i++
     i > math.increment [i]
     
-    arrayLength -> arrays.length [my_array]
+    array_length -> arrays.length [my_array]
     
     # i < my_array.length
     conditionals.run [conditionals.lessThan [i, arrayLength], forLoopExample]
