@@ -20,6 +20,7 @@ class Interpreter(
 
 
     private val scopes = mutableListOf<MutableList<Variable>>()
+    private val handlerScopes = mutableListOf<MethodHandler>()
 
     fun run() {
         // Tokenize the raw code
