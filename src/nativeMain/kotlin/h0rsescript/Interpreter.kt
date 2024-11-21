@@ -211,6 +211,9 @@ class Interpreter(
         // Remove local scope after execution
         scopes.removeLast()
 
+        // Remove the handler
+        MethodHandler.handlers.removeLast()
+
         // Return the output of the function
         return HSType.NULL()
     }
