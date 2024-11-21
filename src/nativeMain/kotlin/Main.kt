@@ -97,5 +97,6 @@ private fun parseArguments(args: Array<String>): Arguments {
         // Parse program arguments
         else programArgs.add(arg)
     }
+    programArgs.removeFirst()
     return Arguments(options, command, programArgs)
 }
