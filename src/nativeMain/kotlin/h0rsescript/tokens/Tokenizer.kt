@@ -22,7 +22,8 @@ object Tokenizer {
 
         TokenType.ASSIGNMENT_OPERATOR to symbols.joinToString("|"),
 
-
+        TokenType.OPEN_CURLY to """\{""",
+        TokenType.CLOSE_CURLY to """\}""",
         TokenType.OPEN_BRACKET to """\[""",
         TokenType.CLOSE_BRACKET to """]""",
 
