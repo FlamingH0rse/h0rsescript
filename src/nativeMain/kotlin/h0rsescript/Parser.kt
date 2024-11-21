@@ -1,12 +1,7 @@
 package me.flaming.h0rsescript
 
-import me.flaming.h0rsescript.syntax.AssignmentNode
-import me.flaming.h0rsescript.syntax.FunctionCallNode
-import me.flaming.h0rsescript.syntax.FunctionDefNode
-import me.flaming.h0rsescript.syntax.IdentifierNode
-import me.flaming.h0rsescript.syntax.LiteralNode
 import me.flaming.h0rsescript.error.UnexpectedTokenError
-import me.flaming.h0rsescript.syntax.ASTNode
+import me.flaming.h0rsescript.syntax.*
 import me.flaming.h0rsescript.tokens.Token
 import me.flaming.h0rsescript.tokens.TokenType
 
@@ -110,7 +105,7 @@ object Parser {
         return FunctionDefNode(name.value, options, body)
     }
     private fun getFunctionCallNode(): FunctionCallNode {
-        // IDENTIFIER, OPEN_BRACKET, ...IDENTIFIER/STRING/NUMBER/BOOLEAN, CLOSE_BRACKET
+        // IDENTIFIER, OPEN_BRACKET, ...IDENTIFIER/STRING/NUMBER/BOOLEAN/ARRAY, CLOSE_BRACKET
 
         // Get function name
         val name = checkAndGet(TokenType.QUALIFIED_IDENTIFIER, TokenType.IDENTIFIER)
@@ -121,16 +116,10 @@ object Parser {
         // Get arguments
         while (currentToken()?.type != TokenType.CLOSE_BRACKET) {
 
-            val arg = checkAndGet(TokenType.IDENTIFIER, TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN)
-            if (currentToken()?.type != TokenType.CLOSE_BRACKET) checkAndGet(TokenType.COMMA)
+            val arg = checkAndGet(TokenType.IDENTIFIER, TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN, TokenType.OPEN_CURLY)
+            val argNode = getIdentifierOrLiteralNode(arg)
 
-            val argNode: ASTNode = when (arg.type) {
-                TokenType.IDENTIFIER -> IdentifierNode(arg.value)
-                TokenType.STRING -> LiteralNode(arg.value, LiteralNode.LiteralType.STR)
-                TokenType.NUMBER -> LiteralNode(arg.value, LiteralNode.LiteralType.NUM)
-                TokenType.BOOLEAN -> LiteralNode(arg.value, LiteralNode.LiteralType.BOOL)
-                else -> IdentifierNode("IF_YOU_READ_THIS_YOU_MESSED_UP") // Shouldn't happen lol
-            }
+            if (currentToken()?.type != TokenType.CLOSE_BRACKET) checkAndGet(TokenType.COMMA)
             arguments.add(argNode)
         }
         if ("log-function-calls" in options) println("${name.value} $arguments")
@@ -138,6 +127,28 @@ object Parser {
 
 
         return FunctionCallNode(name.value, arguments.toList())
+    }
+    private fun getIdentifierOrLiteralNode(arg: Token): ASTNode {
+        return when (arg.type) {
+            TokenType.IDENTIFIER -> IdentifierNode(arg.value)
+            TokenType.STRING -> LiteralNode(arg.value, LiteralNode.LiteralType.STR)
+            TokenType.NUMBER -> LiteralNode(arg.value, LiteralNode.LiteralType.NUM)
+            TokenType.BOOLEAN -> LiteralNode(arg.value, LiteralNode.LiteralType.BOOL)
+            TokenType.OPEN_CURLY -> {
+                val elements = mutableListOf<ASTNode>()
+                var caughtElements = false
+                while (!caughtElements) {
+                    val token = checkAndGet(TokenType.IDENTIFIER, TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN, TokenType.OPEN_CURLY)
+                    elements.add(getIdentifierOrLiteralNode(token))
+                    if (currentToken()?.type != TokenType.CLOSE_CURLY) checkAndGet(TokenType.COMMA)
+                    else caughtElements = true
+                }
+                // End of ARRAY
+                checkAndGet(TokenType.CLOSE_CURLY)
+                return LiteralNode(type = LiteralNode.LiteralType.ARRAY, list = elements)
+            }
+            else -> IdentifierNode("IF_YOU_READ_THIS_YOU_MESSED_UP") // Shouldn't happen lol
+        }
     }
     private fun getAssignmentNode(): AssignmentNode {
         val assignmentTypes = mapOf(
