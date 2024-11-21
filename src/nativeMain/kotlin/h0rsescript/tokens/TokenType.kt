@@ -10,6 +10,8 @@ enum class TokenType {
     BOOLEAN,       // true/false/TRUE/FALSE
     OPEN_BRACKET,  // [
     CLOSE_BRACKET, // ]
+    OPEN_CURLY,    // {
+    CLOSE_CURLY,   // }
     COMMA,         // ,
     WHITESPACE,    // Spaces, tabs, newlines etc.
 //    NEWLINE,       // Newlines
