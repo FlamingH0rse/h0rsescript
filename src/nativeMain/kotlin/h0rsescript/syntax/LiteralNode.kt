@@ -1,6 +1,6 @@
 package me.flaming.h0rsescript.syntax
 
-data class LiteralNode (val rawValue: String, val type: LiteralType): ASTNode {
+data class LiteralNode (val rawValue: String = "", val type: LiteralType, val list: List<ASTNode> = listOf()): ASTNode {
     private val escapeSequences = mapOf(
         "\\\\" to "\\",
         "\\n" to "\n",
@@ -10,12 +10,13 @@ data class LiteralNode (val rawValue: String, val type: LiteralType): ASTNode {
         "\\\"" to "\""
     )
     enum class LiteralType {
-        STR, NUM, BOOL
+        STR, NUM, BOOL, ARRAY
     }
-    val value = when (type) {
-        LiteralType.STR -> unescape(rawValue).trim('"')
-        LiteralType.NUM -> rawValue.toDouble()
-        LiteralType.BOOL -> rawValue.lowercase().toBooleanStrict()
+    val value: Any = when (type) {
+        LiteralType.STR -> unescape(rawValue).trim('"')       // String
+        LiteralType.NUM -> rawValue.toDouble()                       // Double
+        LiteralType.BOOL -> rawValue.lowercase().toBooleanStrict()   // Boolean
+        LiteralType.ARRAY -> list                                    // List<ASTNode> needs to be parsed during runtime
     }
     private fun unescape(str: String): String {
         var unescapedStr = str
