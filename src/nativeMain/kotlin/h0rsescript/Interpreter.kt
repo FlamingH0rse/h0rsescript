@@ -28,11 +28,11 @@ class Interpreter(
         // Remove whitespaces and comments
         tokens = tokens.filter { t -> t.type != TokenType.WHITESPACE && t.type != TokenType.COMMENT }.toMutableList()
 
-        println(tokens.map { t -> t.value })
+//        println(tokens.map { t -> t.value })
 
         // Parse all tokens to ASTNode's
         val nodes = Parser.parse(tokens, options["parser-options"] ?: listOf())
-        println(nodes)
+//        println(nodes)
 
         // Adds Global scope to scopes
         val variables = mutableListOf<Variable>()
@@ -155,7 +155,7 @@ class Interpreter(
         val variables = scopes.joinToString("\n\n") { s ->
             s.joinToString("\n") { v -> "${v.name} :${v.value::class.simpleName} = ${v.value}" }
         }
-        println(variables)
+//        println(variables)
         return null
     }
 

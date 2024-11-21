@@ -49,7 +49,7 @@ class MethodHandler(namespaces: List<String>) {
         handlers.add(this)
     }
     fun execute(name: String, arguments: List<HSType>): HSType {
-        println("Executing $name [ ${arguments.joinToString(",")} ]")
+//        println("Executing $name [ ${arguments.joinToString(",")} ]")
 
         val methodSignature = name.split('.').toMutableList()
         val methodName = methodSignature.removeLast()
