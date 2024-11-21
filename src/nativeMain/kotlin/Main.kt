@@ -10,6 +10,8 @@ import kotlin.system.exitProcess
 const val LANG_NAME = "h0rsescript"
 const val VERSION = "0.1.0"
 
+var interpInstance: Interpreter? = null
+
 fun main(args: Array<String>) {
     if (args.isEmpty()) {
         println("Welcome to $LANG_NAME v$VERSION")
@@ -33,8 +35,8 @@ fun main(args: Array<String>) {
         val arguments = parseArguments(args)
 
         // Run interpreter
-        val hsProgram = Interpreter(fileContent, arguments.options, arguments.flags, arguments.programArgs)
-        hsProgram.run()
+        interpInstance = Interpreter(fileContent, arguments.options, arguments.flags, arguments.programArgs)
+        interpInstance!!.run()
     }
 }
 
