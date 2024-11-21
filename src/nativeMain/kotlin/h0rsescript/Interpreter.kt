@@ -35,13 +35,13 @@ class Interpreter(
         val nodes = Parser.parse(tokens, options["parser-options"] ?: listOf())
         println(nodes)
 
-        // Execute the program
-
         // Adds Global scope to scopes
         val variables = mutableListOf<Variable>()
         val globalHandler = MethodHandler(listOf())
         scopes.add(variables)
         handlerScopes.add(globalHandler)
+
+        // Execute the program
         nodes.forEach { evaluateNode(it) }
     }
 
@@ -91,7 +91,6 @@ class Interpreter(
     }
 
     private fun evaluateAssignmentNode(node: AssignmentNode): HSType? {
-        println("Assigning...")
         val variableName = node.name
         val variableValue = evaluateNode(node.value) ?: HSType.NULL()
 
@@ -146,7 +145,10 @@ class Interpreter(
                 currentScope().add(Variable(variableName, variableValue, isConstant))
             }
         }
-        println(scopes)
+//        val variables = scopes.joinToString("\n\n") { s ->
+//            s.joinToString("\n") { v -> "${v.name} :${v.value::class.simpleName} = ${v.value}" }
+//        }
+//        println(variables)
         return null
     }
 
@@ -178,6 +180,10 @@ class Interpreter(
 
         val functionInfo = foundFunction.value as HSType.FUN
 
+        return executeHSFunction(functionInfo, arguments)
+    }
+
+    fun executeHSFunction(functionInfo: HSType.FUN, arguments: List<HSType>): HSType {
         // Get function options
         val options = functionInfo.options
         val body = functionInfo.body
