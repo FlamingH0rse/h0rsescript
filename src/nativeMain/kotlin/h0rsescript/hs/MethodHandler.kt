@@ -2,6 +2,7 @@ package me.flaming.h0rsescript.hs
 
 import me.flaming.h0rsescript.ErrorHandler
 import me.flaming.h0rsescript.error.ReferenceError
+import me.flaming.h0rsescript.hs.namespaces.*
 
 class MethodHandler(namespaces: List<String>) {
     companion object {
@@ -32,7 +33,11 @@ class MethodHandler(namespaces: List<String>) {
     val loadedNamespaces = mutableMapOf<String, Namespace>()
     init {
         val namespaceMap = mapOf(
-            "" to HSNamespace
+            "" to HSNamespace,
+            "console" to ConsoleNamespace,
+            "math" to MathNamespace,
+            "string" to StringNamespace,
+            "conditionals" to ConditionalNamespace
         )
         namespaces.forEach { n ->
             // $include hs
