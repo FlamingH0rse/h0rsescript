@@ -47,7 +47,15 @@ class Interpreter(
 
     private fun evaluateNode(node: ASTNode): HSType? {
         return when (node) {
-            is LiteralNode -> HSType.from(node.value)
+            is LiteralNode -> {
+                // Parse ARRAY
+                if (node.value is List<*>) {
+                    val list = node.value.map { evaluateNode(it as ASTNode) }
+                    HSType.from(list)
+                }
+                // Other types
+                else HSType.from(node.value)
+            }
 
             // Throws ReferenceError
             is IdentifierNode -> {
@@ -145,10 +153,10 @@ class Interpreter(
                 currentScope().add(Variable(variableName, variableValue, isConstant))
             }
         }
-//        val variables = scopes.joinToString("\n\n") { s ->
-//            s.joinToString("\n") { v -> "${v.name} :${v.value::class.simpleName} = ${v.value}" }
-//        }
-//        println(variables)
+        val variables = scopes.joinToString("\n\n") { s ->
+            s.joinToString("\n") { v -> "${v.name} :${v.value::class.simpleName} = ${v.value}" }
+        }
+        println(variables)
         return null
     }
 
