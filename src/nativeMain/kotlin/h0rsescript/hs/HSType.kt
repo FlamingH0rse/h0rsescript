@@ -4,11 +4,11 @@ import me.flaming.h0rsescript.syntax.ASTNode
 
 sealed class HSType {
     data class STR(val value: String) : HSType() {
-        override fun toString() = "\"$value\""
+        override fun toString() = value
     }
 
     data class NUM(val value: Double) : HSType() {
-        override fun toString() = value.toString()
+        override fun toString() = (if (value % 1 == 0.0) value.toLong() else value).toString()
     }
 
     data class BOOL(val value: Boolean) : HSType() {
