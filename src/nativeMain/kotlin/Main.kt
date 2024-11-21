@@ -12,6 +12,14 @@ const val VERSION = "0.1.0"
 
 var interpInstance: Interpreter? = null
 
+val optionsList = mapOf(
+    "-version" to "Display current HS version",
+    "-help" to "Display available commands and flags",
+    "--parser-options=" to "Pass options for the parser\nAvailable values: [log-tokens, log-function-defines, log-function-calls]"
+)
+
+val commandsHelp = "Usage: hs [options] <file_name> [arguments]\n\nAvailable options:" + optionsList.map { (c, d)-> "$c      $d"}.joinToString("\n")
+
 fun main(args: Array<String>) {
     if (args.isEmpty()) {
         println("Welcome to $LANG_NAME v$VERSION")
@@ -25,37 +33,28 @@ fun main(args: Array<String>) {
 
         }
     } else {
+
+
         // Parse CLI arguments
         val arguments = parseArguments(args)
 
-        val command = arguments.command
+        val options = arguments.options
+        val fileName = arguments.fileName
         val programArgs = arguments.programArgs
-        val parameters = arguments.parameters
 
-        // Check if valid command
-        if (command !in commands) {
-            println(commands.map {(c, d)-> "$c      $d"}.joinToString("\n"))
-            return
-        }
+        // Check version
+        if (options.containsKey("version")) return println("$LANG_NAME current version: $VERSION")
+        // Display available options
+        if (options.containsKey("help")) return println(commandsHelp)
 
-        // Run command
-        when (command) {
-            "run" -> {
-                val fileName = programArgs[0]
-                val filePath = fileName.toPath()
+        // Run HS file
+        if (fileName == "") return println("Error: Please specify file name to run")
+        val filePath = fileName.toPath()
+        val fileContent = readFileContent(filePath)
 
-                // Read file content
-                val fileContent = readFileContent(filePath)
-                // Run interpreter
-                interpInstance = Interpreter(fileContent, parameters, programArgs)
-                interpInstance!!.run()
-            }
-            "version" -> {
-                println("$LANG_NAME \n Current version: $VERSION")
-            }
-            "help" -> println(commands.map {(c, d)-> "$c      $d"}.joinToString("\n"))
-        }
-
+        // Run interpreter
+        interpInstance = Interpreter(fileContent, options, programArgs)
+        interpInstance!!.run()
     }
 }
 
@@ -72,31 +71,32 @@ private fun readFileContent(filePath: Path) : String {
     }
 }
 
-data class Arguments(val parameters: Map<String, List<String>>, val command: String, val programArgs: List<String>)
-
-val commands = mapOf(
-    "run" to "Run a HS file",
-    "version" to "Display current HS version",
-    "help" to "Display available commands and flags"
-)
+data class Arguments(val options: Map<String, List<String>>, val fileName: String, val programArgs: List<String>)
 
 private fun parseArguments(args: Array<String>): Arguments {
     val options = mutableMapOf<String, List<String>>()
     val programArgs = mutableListOf<String>()
 
-    // Parse command (run, version, etc.)
-    val command = args[0]
+
+    var fileName: String? = null
+
     for (arg in args) {
         // Parse program options (--option=value1,value2)
         if (arg.startsWith("--")) {
             val keyValue = arg.split('=')
             val key = keyValue[0].removePrefix("--")
-            val values = keyValue[1].split(',')
+            val values = (keyValue.getOrNull(1)?:"").split(',')
             options[key] = values
         }
+        // Parse program options without values (-help, -version)
+        else if (arg.startsWith("-")) {
+            val option = arg.removePrefix("-")
+            options[option] = listOf()
+        }
+        // Parse file name (main.hs)
+        else if (fileName == null) fileName = arg
         // Parse program arguments
         else programArgs.add(arg)
     }
-    programArgs.removeFirst()
-    return Arguments(options, command, programArgs)
+    return Arguments(options, fileName ?: "", programArgs)
 }
