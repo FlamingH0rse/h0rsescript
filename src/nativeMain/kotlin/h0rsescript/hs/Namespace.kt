@@ -17,6 +17,8 @@ abstract class Namespace {
                 ErrorHandler.report(TypeError(name, parameter::class, type))
             }
         }
-        return method.execute(arguments) ?: HSType.NULL()
+
+        val functionOutput = method.execute(arguments)
+        return HSType.from(functionOutput)
     }
 }
