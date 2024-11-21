@@ -25,18 +25,37 @@ fun main(args: Array<String>) {
 
         }
     } else {
-        val fileName = args[0]
-        val filePath = fileName.toPath()
-
-        // Read file content
-        val fileContent = readFileContent(filePath)
-
         // Parse CLI arguments
         val arguments = parseArguments(args)
 
-        // Run interpreter
-        interpInstance = Interpreter(fileContent, arguments.options, arguments.flags, arguments.programArgs)
-        interpInstance!!.run()
+        val command = arguments.command
+        val programArgs = arguments.programArgs
+        val parameters = arguments.parameters
+
+        // Check if valid command
+        if (command !in commands) {
+            println(commands.map {(c, d)-> "$c      $d"}.joinToString("\n"))
+            return
+        }
+
+        // Run command
+        when (command) {
+            "run" -> {
+                val fileName = programArgs[0]
+                val filePath = fileName.toPath()
+
+                // Read file content
+                val fileContent = readFileContent(filePath)
+                // Run interpreter
+                interpInstance = Interpreter(fileContent, parameters, programArgs)
+                interpInstance!!.run()
+            }
+            "version" -> {
+                println("$LANG_NAME \n Current version: $VERSION")
+            }
+            "help" -> println(commands.map {(c, d)-> "$c      $d"}.joinToString("\n"))
+        }
+
     }
 }
 
@@ -53,27 +72,30 @@ private fun readFileContent(filePath: Path) : String {
     }
 }
 
-data class Arguments(val options: Map<String, List<String>>, val flags: List<String>, val programArgs: List<String>)
+data class Arguments(val parameters: Map<String, List<String>>, val command: String, val programArgs: List<String>)
+
+val commands = mapOf(
+    "run" to "Run a HS file",
+    "version" to "Display current HS version",
+    "help" to "Display available commands and flags"
+)
 
 private fun parseArguments(args: Array<String>): Arguments {
     val options = mutableMapOf<String, List<String>>()
-    val flags = mutableListOf<String>()
     val programArgs = mutableListOf<String>()
 
+    // Parse command (run, version, etc.)
+    val command = args[0]
     for (arg in args) {
-        val keyValue = arg.split('=')
         // Parse program options (--option=value1,value2)
-        if (keyValue.size == 2 && keyValue[0].startsWith("--")) {
+        if (arg.startsWith("--")) {
+            val keyValue = arg.split('=')
             val key = keyValue[0].removePrefix("--")
             val values = keyValue[1].split(',')
             options[key] = values
         }
-        // Parse program flags (-G, -D, -GA, etc.)
-        else if (arg.startsWith("-")) {
-            flags.add(arg.removePrefix("-"))
-        }
         // Parse program arguments
         else programArgs.add(arg)
     }
-    return Arguments(options, flags, programArgs)
+    return Arguments(options, command, programArgs)
 }

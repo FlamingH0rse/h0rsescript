@@ -11,7 +11,6 @@ import me.flaming.h0rsescript.tokens.Tokenizer
 class Interpreter(
     private val rawContent: String,
     private val options: Map<String, List<String>>,
-    private val flags: List<String>,
     private val programArgs: List<String>
 ) {
 
