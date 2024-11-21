@@ -15,10 +15,10 @@ sealed class HSType {
         override fun toString() = value.toString()
     }
 
-//    data class ARRAY(val elements: List<HSType>) : HSType() {
-//        override fun toString(): String =
-//            elements.joinToString(prefix = "{", postfix = "}", separator = ", ") { it.toString() }
-//    }
+    data class ARRAY(val elements: List<HSType>) : HSType() {
+        override fun toString(): String =
+            elements.joinToString(prefix = "{", postfix = "}", separator = ", ") { it.toString() }
+    }
 
     data class FUN(
         val name: String,
@@ -33,11 +33,12 @@ sealed class HSType {
     }
     companion object {
         fun from(value: Any?): HSType = when (value) {
+            is HSType -> value
             is String -> STR(value)
             is Double, is Float, is Int, is Long -> NUM(value.toString().toDouble())
             is Boolean -> BOOL(value)
 //            is List<*> -> ARRAY(value.map { from(it!!) })
-            null -> NULL()
+            null, is Unit -> NULL()
             else -> throw IllegalArgumentException("Unsupported data type: ${value::class}")
         }
     }
