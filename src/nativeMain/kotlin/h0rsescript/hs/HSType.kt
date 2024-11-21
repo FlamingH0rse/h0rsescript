@@ -37,8 +37,8 @@ sealed class HSType {
             is String -> STR(value)
             is Double, is Float, is Int, is Long -> NUM(value.toString().toDouble())
             is Boolean -> BOOL(value)
-//            is List<*> -> ARRAY(value.map { from(it!!) })
-            null, is Unit -> NULL()
+            is List<*> -> ARRAY(value.map { from(it) })
+            is Unit, null -> NULL()
             else -> throw IllegalArgumentException("Unsupported data type: ${value::class}")
         }
     }
