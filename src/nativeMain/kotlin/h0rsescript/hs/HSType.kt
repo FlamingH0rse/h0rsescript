@@ -3,32 +3,32 @@ package me.flaming.h0rsescript.hs
 import me.flaming.h0rsescript.syntax.ASTNode
 
 sealed class HSType {
-    data class STR(val value: String) : HSType() {
+    data class STR(var value: String) : HSType() {
         override fun toString() = value
     }
 
-    data class NUM(val value: Double) : HSType() {
+    data class NUM(var value: Double) : HSType() {
         override fun toString() = (if (value % 1 == 0.0) value.toLong() else value).toString()
     }
 
-    data class BOOL(val value: Boolean) : HSType() {
+    data class BOOL(var value: Boolean) : HSType() {
         override fun toString() = value.toString()
     }
 
-    data class ARRAY(val elements: List<HSType>) : HSType() {
+    data class ARRAY(var elements: List<HSType>) : HSType() {
         override fun toString(): String =
             elements.joinToString(prefix = "{", postfix = "}", separator = ", ") { it.toString() }
     }
 
     data class FUN(
-        val name: String,
-        val options: Map<String, List<String>>,
-        val body: List<ASTNode>
+        var name: String,
+        var options: Map<String, List<String>>,
+        var body: List<ASTNode>
     ) : HSType() {
         override fun toString() = "FUN<$name>"
     }
 
-    data class NULL(val value: Any? = null): HSType() {
+    data class NULL(var value: Any? = null): HSType() {
         override fun toString() = "null"
     }
     companion object {
