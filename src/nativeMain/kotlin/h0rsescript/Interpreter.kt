@@ -31,7 +31,18 @@ class Interpreter(
 //        println(tokens.map { t -> t.value })
 
         // Parse all tokens to ASTNode's
-        val nodes = Parser.parse(tokens, options["parser-options"] ?: listOf())
+        val nodes = Parser.parse(tokens, options["parser-options"] ?: listOf()).toMutableList()
+
+        // Add a main function call
+        for (node in nodes) {
+            if (node is FunctionDefNode && node.name == "main") {
+                val argsList = programArgs.map{a -> LiteralNode(a, LiteralNode.LiteralType.STR)}
+                val args = LiteralNode(type = LiteralNode.LiteralType.ARRAY, list = argsList)
+                val mainFunctionCall = FunctionCallNode("main", listOf(args))
+                nodes.add(mainFunctionCall)
+                break
+            }
+        }
 //        println(nodes)
 
         // Adds Global scope to scopes
