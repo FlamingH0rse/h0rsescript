@@ -145,12 +145,10 @@ object Parser {
             TokenType.BOOLEAN -> LiteralNode(arg.value, LiteralNode.LiteralType.BOOL)
             TokenType.OPEN_CURLY -> {
                 val elements = mutableListOf<ASTNode>()
-                var caughtElements = false
-                while (!caughtElements) {
+                while (currentToken()?.type != TokenType.CLOSE_CURLY) {
                     val token = checkAndGet(TokenType.IDENTIFIER, TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN, TokenType.OPEN_CURLY)
                     elements.add(getIdentifierOrLiteralNode(token))
                     if (currentToken()?.type != TokenType.CLOSE_CURLY) checkAndGet(TokenType.COMMA)
-                    else caughtElements = true
                 }
                 // End of ARRAY
                 checkAndGet(TokenType.CLOSE_CURLY)
