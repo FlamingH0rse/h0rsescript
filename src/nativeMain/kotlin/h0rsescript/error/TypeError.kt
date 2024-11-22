@@ -7,6 +7,6 @@ class TypeError(name: String, type: KClass<out HSType>, expected: KClass<out HST
     init {
         super.type = ErrorType.SYNTAX
         super.name = "TypeError"
-        super.message = "Invalid identifier '${name}' of type ${type.simpleName}, expected a ${expected.simpleName}"
+        super.message = "Invalid argument '${name}' of type ${type.simpleName}, expected a ${expected.simpleName}"
     }
 }
