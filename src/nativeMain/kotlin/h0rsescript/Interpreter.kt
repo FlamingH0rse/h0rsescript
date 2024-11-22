@@ -205,7 +205,10 @@ class Interpreter(
         MethodHandler(include)
 
         // Execute the function
-        body.forEach { evaluateNode(it) }
+        for (node in body) {
+            if (node is FunctionReturnNode) return evaluateNode(node.returnValue) ?: HSType.NULL()
+            else evaluateNode(node)
+        }
 
         // Remove local scope after execution
         scopes.removeLast()
