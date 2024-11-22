@@ -11,12 +11,12 @@ abstract class Namespace {
         val method = methods[name]!!
 
         val parametersMap = method.parameterTypes.zip(arguments).toMutableList()
-        // null for empty parameters
+        // Put NULL for empty parameters
         parametersMap.addAll(method.parameterTypes.drop(arguments.size).map {a -> Pair(a, HSType.NULL())})
 
         // Check if parameters are the same type
         for ((type, parameter) in parametersMap) {
-            if (type != HSType.NULL::class && !type.isInstance(parameter)) {
+            if (!type.isInstance(parameter)) {
                 // Throw TypeError
                 ErrorHandler.report(TypeError(parameter.toString(), parameter::class, type))
             }
