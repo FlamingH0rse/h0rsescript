@@ -11,6 +11,7 @@ object Parser {
     private var tokens: List<Token> = listOf()
     private var options: List<String> = listOf()
 
+    private val identifierOrLiteralStartTokens = listOf(TokenType.IDENTIFIER, TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN, TokenType.OPEN_CURLY)
     fun parse(tokens: List<Token>, options: List<String>): List<ASTNode> {
         this.tokens = tokens
         this.options = options
@@ -78,7 +79,8 @@ object Parser {
         val name = checkAndGet(TokenType.IDENTIFIER)
         val options: MutableMap<String, List<String>> = mutableMapOf()
 
-        while (currentToken()?.type == TokenType.KEYWORD && currentToken()?.value != "\$define" && currentToken()?.value != "\$end") {
+        // Parse function options ($include, $mode, $parameters)
+        while (currentToken()?.type == TokenType.KEYWORD && !listOf("\$define", "\$end", "\$return").contains(currentToken()?.value)) {
             val key = checkAndGet(TokenType.KEYWORD)
             val values: MutableList<String> = mutableListOf()
 
@@ -96,7 +98,14 @@ object Parser {
 
         val body: MutableList<ASTNode> = mutableListOf()
         while (currentToken()?.value != "\$end") {
-            val statement = parseStatement()
+            val statement: ASTNode
+            // Parse FunctionReturnNode
+            if (currentToken()?.value == "\$return") {
+                checkAndGet(TokenType.KEYWORD, optionalValue = "\$return")
+                val returnValue = checkAndGet(*identifierOrLiteralStartTokens.toTypedArray())
+                statement = FunctionReturnNode(getIdentifierOrLiteralNode(returnValue))
+            }
+            else statement = parseStatement()
             body.add(statement)
         }
         checkAndGet(TokenType.KEYWORD, optionalValue = "\$end")
@@ -116,7 +125,7 @@ object Parser {
         // Get arguments
         while (currentToken()?.type != TokenType.CLOSE_BRACKET) {
 
-            val arg = checkAndGet(TokenType.IDENTIFIER, TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN, TokenType.OPEN_CURLY)
+            val arg = checkAndGet(*identifierOrLiteralStartTokens.toTypedArray())
             val argNode = getIdentifierOrLiteralNode(arg)
 
             if (currentToken()?.type != TokenType.CLOSE_BRACKET) checkAndGet(TokenType.COMMA)
