@@ -11,7 +11,7 @@ object Tokenizer {
     // Follows priority of matching
     private val tokenPatterns = mapOf(
         TokenType.KEYWORD to keywords.joinToString("|") { k -> "$keywordPrefixPattern$k" },
-        TokenType.BOOLEAN to """true|false|TRUE|FALSE""",
+        TokenType.BOOLEAN to """TRUE|FALSE""",
         TokenType.NUMBER to """\d+(\.\d+)*""",
         TokenType.STRING to """"([^"\\]|\\.)*"""",
 
