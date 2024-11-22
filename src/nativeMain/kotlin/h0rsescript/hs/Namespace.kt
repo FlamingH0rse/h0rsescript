@@ -16,7 +16,7 @@ abstract class Namespace {
 
         // Check if parameters are the same type
         for ((type, parameter) in parametersMap) {
-            if (parameter !is HSType.NULL && !type.isInstance(parameter)) {
+            if (type != HSType.NULL::class && !type.isInstance(parameter)) {
                 // Throw TypeError
                 ErrorHandler.report(TypeError(parameter.toString(), parameter::class, type))
             }
