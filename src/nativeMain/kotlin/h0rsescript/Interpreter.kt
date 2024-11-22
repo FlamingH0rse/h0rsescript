@@ -62,6 +62,15 @@ class Interpreter(
                 if (node.value is List<*>) {
                     val list = node.value.map { evaluateNode(it as ASTNode) }
                     HSType.from(list)
+                } else if (node.value is String) {
+                    val rawString = node.value
+                    val refPattern = Regex("""(?<!\\):(""" + Tokenizer.tokenPatterns[TokenType.IDENTIFIER] + ")")
+
+                    val replacedString = refPattern.replace(rawString) {m ->
+                        val referenceName = m.groupValues[1]
+                        evaluateNode(IdentifierNode(referenceName)).toString()
+                    }
+                    HSType.from(replacedString)
                 }
                 // Other types
                 else HSType.from(node.value)
