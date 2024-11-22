@@ -22,7 +22,7 @@ abstract class Namespace {
             }
         }
 
-        val functionOutput = method.execute(parametersMap.toMap().values.toList())
+        val functionOutput = method.execute(parametersMap.map { (_,b) -> b })
         return HSType.from(functionOutput)
     }
 }
