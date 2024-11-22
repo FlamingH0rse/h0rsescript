@@ -28,7 +28,7 @@
 ### **Installation**
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/h0rsescript.git
+   git clone https://github.com/FlamingH0rse/h0rsescript.git
    cd h0rsescript
    ```
 2. Build the interpreter:
@@ -37,7 +37,7 @@
    ```
 3. Run the interpreter:
    ```bash
-   ./build/bin/native/releaseExecutable/hs.kexe <file>.hs 
+   ./build/bin/native/releaseExecutable/hs.kexe <file_name>
    ```
 
 ---
@@ -60,71 +60,102 @@
 
 function_name [parameter1, parameter2, parameter3, ...]
 ```
-### **Variable Declaration**
+### **Variables**
 
-Variables are declared using 1 of 5 `Assignment Operators`, and the `data` method:
+There are 5 main data types in h0rsescript: `NUM` , `STR`, `BOOL`, `ARRAY`, `FUN` and a `NULL` type.<br>
+Variables are modified using 1 of 5 [Assignment Operators](#assignment-operators), and the `data` method:
 ```py
-my_number -> data [652.03]                          # NUM type
-my_string -> data ["Hello World"]                   # STR type
-my_boolean -> data [true]                           # BOOL type
-my_array -> data [ {1, 3, "PLUH", TRUE, false} ]    # ARR type
+$define main
+$include hs, console
+    my_number -> data [652.03]                             # NUM type
+    my_string -> data ["Hello World"]                      # STR type
+    my_boolean -> data [TRUE]                              # BOOL type
+    my_array -> data [{1, 3, "PLUH", TRUE, my_boolean}]    # ARRAY type
+    
+    # Create a constant
+    my_constant <-> data ["password123"]
+    
+    # Edit the my_string variable's value
+    my_string > data ["Goodbye World"]
+    
+    # Delete my_string variable
+    <- my_string
+    
+    # Empty my_number and my_boolean, i.e, set their values as null
+    < my_number, my_boolean
+    
+    console.write_line [my_boolean] # Prints null
+    
+    console.write_line [my_string]  # Throws ReferenceError
 
-my_constant <-> data ["password123"]
-
-my_string > data ["Goodbye World"]
-
-<- my_string             # Deletes my_string variable
-< my_number, my_boolean   # Empties my_number and my_boolean, sets their values as null
-
-print [my_boolean] # Prints null
-
-print [my_string]  # Throws ReferenceError
+$end
 ```
+The `data` method is provided by the root `hs` library which contains essential methods.<br>
+Internally, the `data` method just returns the value passed to it to allow for variable creation.<br>
+`fun data(x) = x`<br>
+You can still choose to exclude the `hs` library from your scope, if you wish to.
 #### Assignment Operators
 | SYMBOL |   TYPE   |
 |:------:|:--------:|
-|   >    |   EDIT   |
+|   \>   |   EDIT   |
 |   ->   | VARIABLE |
 |  <->   | CONSTANT |
 |   <-   |  DELETE  |
 |   <    |  EMPTY   |
-
-Internally, the function just returns the value passed to it. `fun data(x) = x`
 
 ---
 
 ### **Control Structures**
 
 #### **Conditionals**
+The conditional methods are provided by the `conditionals` library.
 ```py
-$define my_function
-    print ["my_number is greater than 10"]
-$end
+$define main
+$include hs, conditionals
 
-more_than_ten -> conditionals.more_than [my_number, 10]
-conditionals.run [more_than_ten, my_function]
+    # Create a function to run, if a certain condition is true
+    $define my_function
+    $include console
+        console.write_line [":my_number is greater than 10"]
+    $end
+
+    my_number -> data [14]
+    more_than_ten -> conditionals.more_than [my_number, 10]
+    conditionals.run_if [more_than_ten, my_function, {}]
+$end
 ```
+There also exists a `conditionals.run_if_else` method.
 
 #### **Loops**
-```py
-i -> data [0]
-$define for_loop_example
-$parameters my_array
-    element -> arrays.get [my_array, i]
-    
-    print [ "Array element at index :i is :element" ]
-    
-    # i++
-    i > math.increment [i]
-    
-    array_length -> arrays.length [my_array]
-    
-    # i < my_array.length
-    conditionals.run [conditionals.lessThan [i, arrayLength], forLoopExample]
-$end
+There are no actual *loops* in h0rsescript, you can achieve similar behaviour through recursively running a function.<br>
+See [examples](examples) for a better understanding.
 
-# Begin the loop
-for_loop_example [my_array]
+```py
+$define main
+$include hs
+    i -> data [0]
+    my_array -> data [{"banana", "apple", "dog"}]
+
+    $define for_loop_example
+    $include math, conditionals, array, console
+    $parameters my_array
+        element -> array.get [my_array, i]
+
+        console.write_line [ "Array element at index :i is :element" ]
+
+        # i++
+        i > math.add [i, 1]
+
+        array_length -> array.length [my_array]
+
+        # i < array.length [my_array]
+        is_less_than -> conditionals.less_than [i, array_length]
+        conditionals.run_if [is_less_than, for_loop_example, {}]
+    $end
+
+    # Begin the loop
+    for_loop_example [my_array]
+$end
 ```
 
 ---
@@ -132,44 +163,38 @@ for_loop_example [my_array]
 ### **Functions**
 
 ```py
-$define greet               # FUN type
+$define main
+$include console
+    
+    greeting -> greet ["FlamingH0rse"]
+    console.write_line [greeting]
+    
+$end
+
+$define greet
+$include hs
 $parameters name
     result -> data ["Hello :name!"]
     $return result
 $end
-
-greeting -> greet ["FlamingH0rse"]
-print [greeting]
 ```
 
 ---
 
 ### **Error Handling**
 
-Simple `try-catch` equivalent:
-```py
-$try
-    # Code that might fail
-    result -> math.divide [10, 0]
-$catch
-    print ["An error occurred: Division by zero."]
-$end
-```
-
-Default behavior:
-```py
-result -> math.divide [10, 0] # Prints error and exits.
-```
+Error handling might be added soon.
 
 ---
 
 ### **Input/Output**
 
-Input and output are simple but verbose:
+Input and output are simple:
 ```py
-$def simulate_input_output
-    user_name -> console.read []
-    print ["User entered: :user_name"]
+$define simulate_input_output
+$include console
+    user_name -> console.read_line ["Enter your name:"]
+    console.write_line ["User entered: :user_name"]
 $end
 
 simulate_input_output []
@@ -179,14 +204,16 @@ simulate_input_output []
 
 ## **Modes**
 
+To be added in future versions.<br>
 Modes customize the function's behavior, defined at the top of each function:
 ```py
 $define employee
+$include hs, console
 $mode static_typing
 $parameters STR:name, NUM:age
 
     STR:employee_info -> data ["Employee name - \":name\" Employee age - :age"]
-    print [employee_info]
+    console.write_line [employee_info]
     
 $end
 ```
@@ -211,28 +238,54 @@ $end
 ### **Factorial Calculation**
 ```py
 $define main
-$parameters *args
-    fact factorial [5]
+$include console
+$parameters args
+    fact -> factorial [5]
+    console.write_line [fact]
 $end
 
-$def factorial
-$mode static_typing
-$parameters NUM: n
-    BOOL:is_base_case -> conditionals.is_equal [n, 1]
-    NUM:base_result -> data [1]
-    
-    NUM:previous_num -> math.decrement [n]
-    
-    NUM: previous_num_fact -> factorial [previous_num]
-    
-    NUM:recursive_result -> math.multiply [n, previous_num_fact]
-    
-    NUM:result -> conditionals.run_or_else [is_base_case, base_result, recursive_result]
-    
+$define factorial
+$parameters n
+$include hs, math, conditionals
+
+    result -> data [n]
+
+    is_one -> conditionals.equals [n, 0]
+    is_zero -> conditionals.equals [n, 1]
+    is_zero_or_one -> conditionals.or [is_zero, is_one]
+
+    $define recursive_factorial
+    $parameters n
+
+        n > math.subtract [n, 1]
+
+        is_more_than_zero -> conditionals.more_than [n, 0]
+
+        $define multiply_result_with_prev_num
+            result > math.multiply [result, n]
+            recursive_factorial[]
+        $end
+
+        conditionals.run_if [
+                is_more_than_zero,
+                multiply_result_with_prev_num, {}
+            ]
+    $end
+
+    $define return_one
+        result > data [1]
+    $end
+
+    conditionals.run_if_else[
+        is_zero_or_one,
+        return_one,
+        {},
+        recursive_factorial,
+        {n}
+    ]
+
     $return result
 $end
-
-
 ```
 
 ---
@@ -252,6 +305,12 @@ There have been *at least* 4 different iterations of this language, repositories
 ## **Quick Links**
 - [Issues](https://github.com/FlamingH0rse/h0rsescript/issues)
 - [Discussions](https://github.com/FlamingH0rse/h0rsescript/discussions)
+
+### Resources
+If you wish to learn how to make your own custom (interpreted) programming language, you can choose to refer to these following articles:
+- [Writing an interpreter](https://www.toptal.com/scala/writing-an-interpreter)
+- [Build your own programming language](https://github.com/codecrafters-io/build-your-own-x/#build-your-own-programming-language)
+- [AST explained in plain english](https://dev.to/balapriya/abstract-syntax-tree-ast-explained-in-plain-english-1h38)
 
 ### Contributions
 If you wish to contribute to this project, simply open a pull request, and it will be reviewed accordingly.
