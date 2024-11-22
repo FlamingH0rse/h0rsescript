@@ -23,7 +23,7 @@ object ConditionalNamespace : Namespace() {
         "equals" to Method(HSType::class, HSType::class) { args ->
             args[0] == args[1]
         },
-        "greater_than" to Method(HSType.NUM::class, HSType.NUM::class) { args ->
+        "more_than" to Method(HSType.NUM::class, HSType.NUM::class) { args ->
             val num1 = (args[0] as HSType.NUM).value
             val num2 = (args[1] as HSType.NUM).value
             num1 > num2
@@ -33,7 +33,7 @@ object ConditionalNamespace : Namespace() {
             val num2 = (args[1] as HSType.NUM).value
             num1 < num2
         },
-        "greater_than_or_equals" to Method(HSType.NUM::class, HSType.NUM::class) { args ->
+        "more_than_or_equals" to Method(HSType.NUM::class, HSType.NUM::class) { args ->
             val num1 = (args[0] as HSType.NUM).value
             val num2 = (args[1] as HSType.NUM).value
             num1 >= num2
@@ -47,7 +47,7 @@ object ConditionalNamespace : Namespace() {
             val condition = (args[0] as HSType.BOOL).value
             val function = (args[1] as HSType.FUN)
             val arguments = (args[2] as HSType.ARRAY).elements
-            if (condition) me.flaming.interpInstance!!.executeHSFunction(function, arguments)
+            if (condition) me.flaming.interpInstance!!.executeHSFunction(function, arguments) else null
         },
         "run_if_else" to Method(HSType.BOOL::class, HSType.FUN::class, HSType.ARRAY::class, HSType.FUN::class, HSType.ARRAY::class) { args ->
             val condition = (args[0] as HSType.BOOL).value
