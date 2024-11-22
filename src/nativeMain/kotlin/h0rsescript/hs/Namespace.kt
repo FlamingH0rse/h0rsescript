@@ -9,16 +9,20 @@ abstract class Namespace {
     fun hasMethod(name: String): Boolean = name in methods
     fun executeMethod(name: String, arguments: List<HSType>): HSType {
         val method = methods[name]!!
-        val parametersMap = method.parameterTypes.zip(arguments)
+
+        val parametersMap = method.parameterTypes.zip(arguments).toMutableList()
+        // null for empty parameters
+        parametersMap.addAll(method.parameterTypes.drop(arguments.size).map {a -> Pair(a, HSType.NULL())})
+
         // Check if parameters are the same type
         for ((type, parameter) in parametersMap) {
             if (!type.isInstance(parameter)) {
                 // Throw TypeError
-                ErrorHandler.report(TypeError(name, parameter::class, type))
+                ErrorHandler.report(TypeError(parameter.toString(), parameter::class, type))
             }
         }
 
-        val functionOutput = method.execute(arguments)
+        val functionOutput = method.execute(parametersMap.toMap().values.toList())
         return HSType.from(functionOutput)
     }
 }
