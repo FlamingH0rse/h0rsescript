@@ -12,7 +12,7 @@ object Tokenizer {
     val tokenPatterns = mapOf(
         TokenType.KEYWORD to keywords.joinToString("|") { k -> "$keywordPrefixPattern$k" },
         TokenType.BOOLEAN to """TRUE|FALSE""",
-        TokenType.NUMBER to """\d+(\.\d+)*""",
+        TokenType.NUMBER to """-?\d+(\.\d+)*""",
         TokenType.STRING to """"([^"\\]|\\.)*"""",
 
         TokenType.QUALIFIED_IDENTIFIER to """[a-zA-Z_][a-zA-Z0-9_.]*[a-zA-Z0-9_]""",
