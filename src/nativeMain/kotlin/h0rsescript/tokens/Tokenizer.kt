@@ -9,7 +9,7 @@ object Tokenizer {
     private val symbols = listOf("->", "<->", ">", "<-", "<")
 
     // Follows priority of matching
-    private val tokenPatterns = mapOf(
+    val tokenPatterns = mapOf(
         TokenType.KEYWORD to keywords.joinToString("|") { k -> "$keywordPrefixPattern$k" },
         TokenType.BOOLEAN to """TRUE|FALSE""",
         TokenType.NUMBER to """\d+(\.\d+)*""",
