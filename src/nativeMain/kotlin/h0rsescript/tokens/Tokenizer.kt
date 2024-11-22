@@ -18,7 +18,7 @@ object Tokenizer {
         TokenType.QUALIFIED_IDENTIFIER to """[a-zA-Z_][a-zA-Z0-9_.]*[a-zA-Z0-9_]""",
 
         // Separate check for this in tokenize()
-        TokenType.IDENTIFIER to """[a-zA-Z_][a-zA-Z0-9_]+""",
+        TokenType.IDENTIFIER to """[a-zA-Z_][a-zA-Z0-9_]*""",
 
         TokenType.ASSIGNMENT_OPERATOR to symbols.joinToString("|"),
 
