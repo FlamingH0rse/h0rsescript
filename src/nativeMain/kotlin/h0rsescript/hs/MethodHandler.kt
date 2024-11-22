@@ -37,7 +37,8 @@ class MethodHandler(namespaces: List<String>) {
             "console" to ConsoleNamespace,
             "math" to MathNamespace,
             "string" to StringNamespace,
-            "conditionals" to ConditionalNamespace
+            "conditionals" to ConditionalNamespace,
+            "array" to ArrayNamespace
         )
         namespaces.forEach { n ->
             // $include hs
