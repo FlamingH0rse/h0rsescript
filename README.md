@@ -1,6 +1,6 @@
 # h0rsescript `.h0`
 
-**h0rsescript** is a dynamically-typed and interpreted, and trauma-inducing programming language designed to make simple tasks extremely complicated. It's a joke language, making fun of the absurdity of the purely-functional programming in languages like Haskell (hence, the old name `HS` - file extension for Haskell files). It also incorporates boilerplate *features* that Java has. It's written in Kotlin (obviously) and open-source.
+**h0rsescript** is a dynamically-typed and interpreted, and trauma-inducing programming language designed to make simple tasks extremely complicated. It's a joke language, making fun of the absurdity of the purely-functional programming in languages like Haskell (hence, the old name `HS` - file extension for Haskell files). It also incorporates boilerplate *features* that Java has. It's written in Kotlin and is open-source.
 
 ---
 
