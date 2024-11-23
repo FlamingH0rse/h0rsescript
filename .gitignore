@@ -130,6 +130,5 @@ hs_err_pid*
 
 # Testing and concept files
 *.h0
-*.hs
 test.js
-hs.txt
+h0.txt
