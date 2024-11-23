@@ -1,12 +1,14 @@
 package me.flaming.h0rsescript
 
-import me.flaming.h0rsescript.error.IllegalAssignmentError
-import me.flaming.h0rsescript.error.ReferenceError
-import me.flaming.h0rsescript.hs.HSType
-import me.flaming.h0rsescript.hs.MethodHandler
-import me.flaming.h0rsescript.syntax.*
-import me.flaming.h0rsescript.tokens.TokenType
-import me.flaming.h0rsescript.tokens.Tokenizer
+import me.flaming.h0rsescript.ast.*
+import me.flaming.h0rsescript.core.ErrorHandler
+import me.flaming.h0rsescript.core.H0Type
+import me.flaming.h0rsescript.core.MethodHandler
+import me.flaming.h0rsescript.errors.IllegalAssignmentError
+import me.flaming.h0rsescript.errors.ReferenceError
+import me.flaming.h0rsescript.parser.Parser
+import me.flaming.h0rsescript.parser.TokenType
+import me.flaming.h0rsescript.parser.Tokenizer
 
 class Interpreter(
     private val rawContent: String,
@@ -15,7 +17,7 @@ class Interpreter(
 ) {
 
     // Variable class
-    data class Variable(val name: String, var value: HSType, var isConstant: Boolean = false)
+    data class Variable(val name: String, var value: H0Type, var isConstant: Boolean = false)
 
 
     private val scopes = mutableListOf<MutableList<Variable>>()
@@ -55,13 +57,13 @@ class Interpreter(
         nodes.forEach { evaluateNode(it) }
     }
 
-    private fun evaluateNode(node: ASTNode): HSType? {
+    private fun evaluateNode(node: ASTNode): H0Type? {
         return when (node) {
             is LiteralNode -> {
                 // Parse ARRAY
                 if (node.value is List<*>) {
                     val list = node.value.map { evaluateNode(it as ASTNode) }
-                    HSType.from(list)
+                    H0Type.from(list)
                 } else if (node.value is String) {
                     val rawString = node.value
                     val refPattern = Regex("""(?<!\\):(""" + Tokenizer.tokenPatterns[TokenType.IDENTIFIER] + ")")
@@ -70,10 +72,10 @@ class Interpreter(
                         val referenceName = m.groupValues[1]
                         evaluateNode(IdentifierNode(referenceName)).toString()
                     }
-                    HSType.from(replacedString)
+                    H0Type.from(replacedString)
                 }
                 // Other types
-                else HSType.from(node.value)
+                else H0Type.from(node.value)
             }
 
             // Throws ReferenceError
@@ -81,7 +83,7 @@ class Interpreter(
                 val ref = node.name
 
                 // Pre-defined identifiers
-                if (ref == "null") return HSType.NULL()
+                if (ref == "null") return H0Type.NULL()
 
                 // Gets variable from last available scope
                 val foundVar = getFromLastScope(ref)
@@ -110,16 +112,16 @@ class Interpreter(
                     error.message += "\nA variable with that name already exists"
                     ErrorHandler.report(error)
                 }
-                currentScope().add(Variable(functionName, HSType.FUN(functionName, options, body), true))
+                currentScope().add(Variable(functionName, H0Type.FUN(functionName, options, body), true))
                 return null
             }
             else -> null
         }
     }
 
-    private fun evaluateAssignmentNode(node: AssignmentNode): HSType? {
+    private fun evaluateAssignmentNode(node: AssignmentNode): H0Type? {
         val variableName = node.name
-        val variableValue = evaluateNode(node.value) ?: HSType.NULL()
+        val variableValue = evaluateNode(node.value) ?: H0Type.NULL()
 
         val isConstant = node.assignmentType == AssignmentNode.AssignmentType.CONSTANT
 
@@ -179,9 +181,9 @@ class Interpreter(
         return null
     }
 
-    private fun evaluateFunctionCallNode(node: FunctionCallNode): HSType {
+    private fun evaluateFunctionCallNode(node: FunctionCallNode): H0Type {
         val functionName = node.name
-        val arguments = node.arguments.map { evaluateNode(it) ?: HSType.NULL() }
+        val arguments = node.arguments.map { evaluateNode(it) ?: H0Type.NULL() }
 
         val error = ReferenceError(functionName)
 
@@ -200,17 +202,17 @@ class Interpreter(
         }
 
         // Throw ReferenceError if non-runnable function
-        if (foundFunction.value !is HSType.FUN) {
+        if (foundFunction.value !is H0Type.FUN) {
             error.message += "\n'$functionName' is not a valid function name"
             ErrorHandler.report(error)
         }
 
-        val functionInfo = foundFunction.value as HSType.FUN
+        val functionInfo = foundFunction.value as H0Type.FUN
 
-        return executeHSFunction(functionInfo, arguments)
+        return executeH0Function(functionInfo, arguments)
     }
 
-    fun executeHSFunction(functionInfo: HSType.FUN, arguments: List<HSType>): HSType {
+    fun executeH0Function(functionInfo: H0Type.FUN, arguments: List<H0Type>): H0Type {
         // Get function options
         val options = functionInfo.options
         val body = functionInfo.body
@@ -226,7 +228,7 @@ class Interpreter(
 
         // Execute the function
         for (node in body) {
-            if (node is FunctionReturnNode) return evaluateNode(node.returnValue) ?: HSType.NULL()
+            if (node is FunctionReturnNode) return evaluateNode(node.returnValue) ?: H0Type.NULL()
             else evaluateNode(node)
         }
 
@@ -237,7 +239,7 @@ class Interpreter(
         MethodHandler.handlers.removeLast()
 
         // Return the output of the function
-        return HSType.NULL()
+        return H0Type.NULL()
     }
 
     // Gets from the last available scope (checks all scopes, until it finds it)

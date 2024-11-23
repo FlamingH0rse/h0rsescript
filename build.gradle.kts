@@ -23,7 +23,7 @@ kotlin {
         binaries {
             executable {
                 entryPoint = "me.flaming.main"
-                baseName = "hs"
+                baseName = "h0"
             }
         }
     }
