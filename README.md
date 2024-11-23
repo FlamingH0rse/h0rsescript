@@ -1,6 +1,6 @@
-# h0rsescript
+# h0rsescript `.h0`
 
-**h0rsescript** is a dynamically-typed and interpreted, and trauma-inducing programming language designed to make simple tasks extremely complicated. It's a joke language, making fun of the absurdity of the purely-functional programming in languages like Haskell (hence, the name `HS` - file extension for Haskell files). It also incorporates boilerplate *features* that Java has. It's written in Kotlin (obviously) and open-source.
+**h0rsescript** is a dynamically-typed and interpreted, and trauma-inducing programming language designed to make simple tasks extremely complicated. It's a joke language, making fun of the absurdity of the purely-functional programming in languages like Haskell (hence, the old name `HS` - file extension for Haskell files). It also incorporates boilerplate *features* that Java has. It's written in Kotlin (obviously) and open-source.
 
 ---
 
@@ -9,10 +9,9 @@
 - [Getting Started](#getting-started)
 - [Features](#features)
 - [Basic Syntax](#basic-syntax)
-    - [Function Calls](#function-calls)
-    - [Variable Declaration](#variable-declaration)
-    - [Control Structures](#control-structures)
     - [Functions](#functions)
+    - [Variables](#variable-declaration)
+    - [Control Structures](#control-structures)
     - [Error Handling](#error-handling)
     - [Input/Output](#inputoutput)
 - [Modes](#modes)
@@ -33,32 +32,48 @@
    ```
 2. Build the interpreter:
    ```bash
-   ./gradlew build
+   ./gradlew linkReleaseExecutableNative
    ```
 3. Run the interpreter:
    ```bash
-   ./build/bin/native/releaseExecutable/hs.kexe <file_name>
+   ./build/bin/native/releaseExecutable/h0 <file_name>
    ```
 
 ---
 
 ## **Features**
 
-- **Memory unsafe**: There's no garbage collection, so every variable you create is stored directly in a list.
-- **Function datatype**: Able to pass a function as an object.
-- **Modes**: Choose between `Static` or `Dynamic` typing, and more to come.
-- **Ownership and referencing**: Able to pass around variables as a reference.
-- **Module control**: Choose which packages to use in your code using `$include`. You can even choose to exclude the root `hs` module from your function.
+- **Memory Unsafe**: There is no garbage collection, so every variable is your responsibility.
+- **Module Control**: Choose which libraries to use in your code using `$include`. You can even choose to exclude the root `h0` library from your function.
+- **Parent Scope Editing**: Functions are able to access and modify variables in their parent scope.
+- **Function DataType**: Functions are treated as an object, and can be passed to another function as parameter.
 
 ---
 
 ## **Basic Syntax**
 
-### **Function Calls**
+### **Functions**
 ```py
 # This is a comment
 
-function_name [parameter1, parameter2, parameter3, ...]
+# Every h0rsescript file starts execution at the 'main' function, if it exists
+
+$define main
+$include h0, console
+$parameters args
+
+    greeting -> greet ["FlamingH0rse"]
+    console.write_line [greeting]
+    
+$end
+
+$define greet
+$include h0
+$parameters name                                
+    result -> data ["Hello :name!"]
+    $return result
+$end
+
 ```
 ### **Variables**
 
@@ -66,7 +81,7 @@ There are 5 main data types in h0rsescript: `NUM` , `STR`, `BOOL`, `ARRAY`, `FUN
 Variables are modified using 1 of 5 [Assignment Operators](#assignment-operators), and the `data` method:
 ```py
 $define main
-$include hs, console
+$include h0, console
     my_number -> data [652.03]                             # NUM type
     my_string -> data ["Hello World"]                      # STR type
     my_boolean -> data [TRUE]                              # BOOL type
@@ -90,10 +105,10 @@ $include hs, console
 
 $end
 ```
-The `data` method is provided by the root `hs` library which contains essential methods.<br>
+The `data` method is provided by the root `h0` library which contains essential methods.<br>
 Internally, the `data` method just returns the value passed to it to allow for variable creation.<br>
 `fun data(x) = x`<br>
-You can still choose to exclude the `hs` library from your scope, if you wish to.
+You can still choose to exclude the `h0` library from your scope, if you wish to.
 #### Assignment Operators
 | SYMBOL |   TYPE   |
 |:------:|:--------:|
@@ -111,7 +126,7 @@ You can still choose to exclude the `hs` library from your scope, if you wish to
 The conditional methods are provided by the `conditionals` library.
 ```py
 $define main
-$include hs, conditionals
+$include h0, conditionals
 
     # Create a function to run, if a certain condition is true
     $define my_function
@@ -132,7 +147,7 @@ See [examples](examples) for a better understanding.
 
 ```py
 $define main
-$include hs
+$include h0
     i -> data [0]
     my_array -> data [{"banana", "apple", "dog"}]
 
@@ -155,27 +170,6 @@ $include hs
 
     # Begin the loop
     for_loop_example [my_array]
-$end
-```
-
----
-
-### **Functions**
-
-```py
-$define main
-$include console
-    
-    greeting -> greet ["FlamingH0rse"]
-    console.write_line [greeting]
-    
-$end
-
-$define greet
-$include hs
-$parameters name
-    result -> data ["Hello :name!"]
-    $return result
 $end
 ```
 
@@ -208,7 +202,7 @@ To be added in future versions.<br>
 Modes customize the function's behavior, defined at the top of each function:
 ```py
 $define employee
-$include hs, console
+$include h0, console
 $mode static_typing
 $parameters STR:name, NUM:age
 
@@ -246,7 +240,7 @@ $end
 
 $define factorial
 $parameters n
-$include hs, math, conditionals
+$include h0, math, conditionals
 
     result -> data [n]
 
