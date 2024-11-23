@@ -10,7 +10,7 @@
 - [Features](#features)
 - [Basic Syntax](#basic-syntax)
     - [Functions](#functions)
-    - [Variables](#variable-declaration)
+    - [Variables](#variables)
     - [Control Structures](#control-structures)
     - [Error Handling](#error-handling)
     - [Input/Output](#inputoutput)
