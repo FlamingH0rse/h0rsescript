@@ -7,8 +7,10 @@ import me.flaming.h0rsescript.core.MethodHandler
 import me.flaming.h0rsescript.errors.IllegalAssignmentError
 import me.flaming.h0rsescript.errors.ReferenceError
 import me.flaming.h0rsescript.parser.Parser
+import me.flaming.h0rsescript.parser.Token
 import me.flaming.h0rsescript.parser.TokenType
 import me.flaming.h0rsescript.parser.Tokenizer
+import kotlin.time.measureTime
 
 class Interpreter(
     private val rawContent: String,
@@ -25,15 +27,18 @@ class Interpreter(
 
     fun run() {
         // Tokenize the raw code
-        var tokens = Tokenizer.tokenize(rawContent)
+        var tokens: MutableList<Token>
+        val tokenizeTime = measureTime { tokens = Tokenizer.tokenize(rawContent) }
+        if ("log-interp-times" in options) println("tokenize() took ${tokenizeTime.inWholeMilliseconds}ms")
 
         // Remove whitespaces and comments
         tokens = tokens.filter { t -> t.type != TokenType.WHITESPACE && t.type != TokenType.COMMENT }.toMutableList()
 
-//        println(tokens.map { t -> t.value })
 
         // Parse all tokens to ASTNode's
-        val nodes = Parser.parse(tokens, options["parser-options"] ?: listOf()).toMutableList()
+        val nodes: MutableList<ASTNode>
+        val parseTime = measureTime { nodes = Parser.parse(tokens, options["parser-options"] ?: listOf()).toMutableList() }
+        if ("log-interp-times" in options) println("parse() took ${parseTime.inWholeMilliseconds}ms")
 
         // Add a main function call
         for (node in nodes) {
@@ -54,7 +59,9 @@ class Interpreter(
         handlerScopes.add(globalHandler)
 
         // Execute the program
-        nodes.forEach { evaluateNode(it) }
+        val interpreterTime = measureTime { nodes.forEach { evaluateNode(it) } }
+        if ("log-interp-times" in options) println("evaluate() took ${interpreterTime.inWholeMilliseconds}ms")
+
     }
 
     private fun evaluateNode(node: ASTNode): H0Type? {

@@ -16,7 +16,8 @@ var interpInstance: Interpreter? = null
 val optionsList = mapOf(
     "-version" to "Display current h0 version",
     "-help" to "Display available commands and flags",
-    "--parser-options=" to "Pass options for the parser\nAvailable values: [log-tokens, log-function-defines, log-function-calls]"
+    "--parser-options=" to "Pass options for the parser\nAvailable values: [log-tokens, log-function-defines, log-function-calls]",
+    "-log-interp-times" to "Display the times taken by the tokenizer, parser and interpreter"
 )
 
 val commandsHelp = "Usage: $LANG_NAME_SHORT [options] <file_name> [arguments]\n\nAvailable options:" + optionsList.map { (c, d)-> "$c      $d"}.joinToString("\n")
