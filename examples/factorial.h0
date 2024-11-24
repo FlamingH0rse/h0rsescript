@@ -1,0 +1,49 @@
+$define main
+$include console
+$parameters args
+    fact -> factorial [5]
+    console.write_line [fact]
+$end
+
+$define factorial
+$parameters n
+$include h0, math, conditionals
+
+    result -> data [n]
+
+    is_one -> conditionals.equals [n, 0]
+    is_zero -> conditionals.equals [n, 1]
+    is_zero_or_one -> conditionals.or [is_zero, is_one]
+
+    $define recursive_factorial
+    $parameters n
+
+        n > math.subtract [n, 1]
+
+        is_more_than_zero -> conditionals.more_than [n, 0]
+
+        $define multiply_result_with_prev_num
+            result > math.multiply [result, n]
+            recursive_factorial[]
+        $end
+
+        conditionals.run_if [
+                is_more_than_zero,
+                multiply_result_with_prev_num, {}
+            ]
+    $end
+
+    $define return_one
+        result > data [1]
+    $end
+
+    conditionals.run_if_else[
+        is_zero_or_one,
+        return_one,
+        {},
+        recursive_factorial,
+        {n}
+    ]
+
+    $return result
+$end

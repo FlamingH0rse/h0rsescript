@@ -1,0 +1,87 @@
+$define main
+$include console,number
+
+    num_1_str -> console.read ["Enter first number: "]
+    num_1 -> number.to_num [num_1_str]
+
+    num_2_str -> console.read ["Enter second number: "]
+    num_2 -> number.to_num [num_2_str]
+
+    operation -> console.read ["Enter operation: "]
+
+    result -> calculate [num_1, num_2, operation]
+
+    console.write_line [":num_1 :operation :num_2 = :result"]
+
+$end
+
+$define calculate
+$include h0,console,number,array,conditionals
+$parameters num_1, num_2, operation
+
+    valid_operations -> data [{"+", "-", "*", "/"}]
+
+    is_valid_operation -> array.contains [valid_operations, operation]
+    is_not_valid_operation -> conditionals.not [is_valid_operation]
+
+    conditionals.run_if [
+        is_not_valid_operation,
+        throw_invalid_operation_error, {operation}
+    ]
+
+    result -> data [0]
+
+    $define add
+    $include math
+        result > math.add [num_1, num_2]
+    $end
+
+    $define subtract
+    $include math
+        result > math.subtract [num_1, num_2]
+    $end
+
+    $define multiply
+    $include math
+        result > math.multiply [num_1, num_2]
+    $end
+
+    $define divide
+    $include math
+        result > math.divide [num_1, num_2]
+    $end
+
+    operation_is_add -> conditionals.equals [operation, "+"]
+    conditionals.run_if [
+        operation_is_add,
+        add, {}
+    ]
+
+    operation_is_subtract -> conditionals.equals [operation, "-"]
+    conditionals.run_if [
+        operation_is_subtract,
+        subtract, {}
+    ]
+
+    operation_is_multiply -> conditionals.equals [operation, "*"]
+    conditionals.run_if [
+        operation_is_multiply,
+        multiply, {}
+    ]
+
+    operation_is_divide -> conditionals.equals [operation, "/"]
+    conditionals.run_if [
+        operation_is_divide,
+        divide, {}
+    ]
+
+    $return result
+
+$end
+
+$define throw_invalid_operation_error
+$include h0,console
+$parameters operation
+    console.write_line [":operation is an invalid operation"]
+    exit [-1]
+$end
