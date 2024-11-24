@@ -37,6 +37,7 @@ class MethodHandler(namespaces: List<String>) {
             "console" to ConsoleNamespace,
             "math" to MathNamespace,
             "string" to StringNamespace,
+            "number" to NumberNamespace,
             "conditionals" to ConditionalNamespace,
             "array" to ArrayNamespace
         )
