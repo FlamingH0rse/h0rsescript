@@ -228,7 +228,18 @@ class Interpreter(
 
         // Execute the function
         for (node in body) {
-            if (node is FunctionReturnNode) return evaluateNode(node.returnValue) ?: H0Type.NULL()
+            if (node is FunctionReturnNode) {
+                val output = evaluateNode(node.returnValue) ?: H0Type.NULL()
+
+                // Remove local scope after execution
+                scopes.removeLast()
+
+                // Remove the handler
+                MethodHandler.handlers.removeLast()
+
+                // Return the output of the function
+                return output
+            }
             else evaluateNode(node)
         }
 
@@ -238,7 +249,7 @@ class Interpreter(
         // Remove the handler
         MethodHandler.handlers.removeLast()
 
-        // Return the output of the function
+        // Return null as output
         return H0Type.NULL()
     }
 
