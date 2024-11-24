@@ -1,4 +1,4 @@
-package me.flaming.h0rsescript.core.namespaces
+package me.flaming.h0rsescript.core.libraries
 
 import me.flaming.h0rsescript.core.ErrorHandler
 import me.flaming.h0rsescript.core.H0Type

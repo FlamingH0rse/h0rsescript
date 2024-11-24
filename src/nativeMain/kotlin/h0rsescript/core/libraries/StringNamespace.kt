@@ -1,4 +1,4 @@
-package me.flaming.h0rsescript.core.namespaces
+package me.flaming.h0rsescript.core.libraries
 
 import me.flaming.h0rsescript.core.H0Type
 import me.flaming.h0rsescript.core.Method
@@ -43,6 +43,9 @@ object StringNamespace : Namespace() {
             val target = (args[1] as H0Type.STR).value
             val replacement = (args[2] as H0Type.STR).value
             str.replace(target, replacement)
+        },
+        "to_string" to Method(H0Type::class) { args ->
+            args[0].toString()
         }
     )
 }

@@ -1,7 +1,7 @@
 package me.flaming.h0rsescript.core
 
 import me.flaming.LANG_NAME_SHORT
-import me.flaming.h0rsescript.core.namespaces.*
+import me.flaming.h0rsescript.core.libraries.*
 import me.flaming.h0rsescript.errors.ReferenceError
 
 class MethodHandler(namespaces: List<String>) {
