@@ -130,5 +130,6 @@ hs_err_pid*
 
 # Testing and concept files
 *.h0
+!examples/*
 test.js
 h0.txt
