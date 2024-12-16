@@ -1,12 +1,15 @@
 # h0rsescript `.h0`
 
-**h0rsescript** is a dynamically-typed and interpreted, and trauma-inducing programming language designed to make simple tasks extremely complicated. It's a joke language, making fun of the absurdity of the purely-functional programming in languages like Haskell (hence, the old name `HS` - file extension for Haskell files). It also incorporates boilerplate *features* that Java has. It's written in Kotlin and is open-source.
+**h0rsescript** is a dynamically-typed and interpreted (and trauma-inducing), programming language with a strong focus on functional programming.<br>
+It is designed to make simple tasks extremely complicated. It's a joke language, parodying the purely-functional programming in languages like Haskell and Scala.<br>
+It's written in Kotlin and is open-source.
 
 ---
 
 ## **Table of Contents**
 
 - [Getting Started](#getting-started)
+    - [Installation](#installation)
 - [Features](#features)
 - [Basic Syntax](#basic-syntax)
     - [Functions](#functions)
@@ -43,10 +46,10 @@
 
 ## **Features**
 
-- **Memory Unsafe**: There is no garbage collection, so every variable is your responsibility.
-- **Module Control**: Choose which libraries to use in your code using `$include`. You can even choose to exclude the root `h0` library from your function.
-- **Parent Scope Editing**: Functions are able to access and modify variables in their parent scope.
-- **Function DataType**: Functions are treated as an object, and can be passed to another function as parameter.
+- **Memory Unsafe**: There is no garbage collection, so every variable you create is your responsibility.
+- **Module Control**: Choose which libraries to use in your code using the `$include` keyword. Each function has it's own scope, which is inherited from its parent's scope.
+- **Parent Scope Access**: Functions are able to access and modify variables in their parent's scope.
+- **First Class Functions**: Functions are treated as an object of [type](#variables) `FUN`, and can be passed to another function just like any other object.
 
 ---
 
@@ -56,12 +59,12 @@
 ```py
 # This is a comment
 
-# Every h0rsescript file starts execution at the 'main' function, if it exists
+# Every h0rsescript program starts execution at the 'main' function, if it exists
 
 $define main
 $include h0, console
 $parameters args
-
+    
     greeting -> greet ["FlamingH0rse"]
     console.write_line [greeting]
     
@@ -69,17 +72,40 @@ $end
 
 $define greet
 $include h0
-$parameters name                                
+$parameters name
     result -> data ["Hello :name!"]
     $return result
 $end
 
 ```
 ### **Variables**
+There are 5 primary data types in h0rsescript:
+- `NUM` - 64-bit floating point number
+- `STR` - String of characters
+- `BOOL` - `TRUE` or `FALSE`
+- `ARRAY` Lists containing multiple values
+- `FUN` Functions
+Additionally, there is also a `NULL` type, used for uninitialized or explicitly empty variables.
+<br>
+Variables are modified using an [assignment operator](#assignment-operators), (and) the `data` method:
+<br>
+The `data` method provided by the root `h0` library, is used for initializing variables. Internally, it simply returns the value passed to it, to allow straightforward declarations and updates.
+<br>
+#### Assignment Operators
+H0rsescript has 5 assignment operators for managing variables:<br>
 
-There are 5 main data types in h0rsescript: `NUM` , `STR`, `BOOL`, `ARRAY`, `FUN` and a `NULL` type.<br>
-Variables are modified using 1 of 5 [Assignment Operators](#assignment-operators), and the `data` method:
-```py
+| Symbol | Operation                             | Example usage               |
+|:------:|:-------------------------------------:|:---------------------------:|
+|   ->   | Declare variable                      | `my_var -> data [value]`    |
+|   <->  | Declare constant                      | `my_const <-> data [value]` |
+|   >    | Modify variable value                 | `my_var > data [new_value]` |
+|   <-   | Delete variable                       | `<- my_var`                 |
+|   <    | Set variable to `NULL` (empties value)| `< my_var`                  |
+
+<details>
+  <summary>Example</summary>
+  
+  ```py
 $define main
 $include h0, console
     my_number -> data [652.03]                             # NUM type
@@ -105,18 +131,8 @@ $include h0, console
 
 $end
 ```
-The `data` method is provided by the root `h0` library which contains essential methods.<br>
-Internally, the `data` method just returns the value passed to it to allow for variable creation.<br>
-`fun data(x) = x`<br>
-You can still choose to exclude the `h0` library from your scope, if you wish to.
-#### Assignment Operators
-| SYMBOL |   TYPE   |
-|:------:|:--------:|
-|   \>   |   EDIT   |
-|   ->   | VARIABLE |
-|  <->   | CONSTANT |
-|   <-   |  DELETE  |
-|   <    |  EMPTY   |
+  
+</details>
 
 ---
 
