@@ -85,6 +85,7 @@ There are 5 primary data types in h0rsescript:
 - `BOOL` - `TRUE` or `FALSE`
 - `ARRAY` Lists containing multiple values
 - `FUN` Functions
+<br>
 Additionally, there is also a `NULL` type, used for uninitialized or explicitly empty variables.
 <br>
 Variables are modified using an [assignment operator](#assignment-operators), (and) the `data` method:
