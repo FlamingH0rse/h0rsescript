@@ -32,7 +32,7 @@ class Interpreter(
         if ("log-interp-times" in options) println("tokenize() took ${tokenizeTime.inWholeMilliseconds}ms")
 
         // Remove whitespaces and comments
-        tokens = tokens.filter { t -> t.type != TokenType.WHITESPACE && t.type != TokenType.COMMENT }.toMutableList()
+        tokens = tokens.filter { t -> t.type != TokenType.COMMENT }.toMutableList()
 
 
         // Parse all tokens to ASTNode's
@@ -73,7 +73,7 @@ class Interpreter(
                     H0Type.from(list)
                 } else if (node.value is String) {
                     val rawString = node.value
-                    val refPattern = Regex("""(?<!\\):(""" + Tokenizer.tokenPatterns[TokenType.IDENTIFIER] + ")")
+                    val refPattern = Regex("""(?<!\\):(""" + """[^\s\${'$'}\<\-\>\[\]\{\}\,\"\\\.]+""" + ")")
 
                     val replacedString = refPattern.replace(rawString) {m ->
                         val referenceName = m.groupValues[1]

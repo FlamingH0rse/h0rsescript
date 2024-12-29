@@ -1,7 +1,7 @@
 $define main
 $include console
 $parameters args
-    fact -> factorial [5]
+    fact -> factorial [7]
     console.write_line [fact]
 $end
 
@@ -11,8 +11,8 @@ $include h0, math, conditionals
 
     result -> data [n]
 
-    is_one -> conditionals.equals [n, 0]
-    is_zero -> conditionals.equals [n, 1]
+    is_zero -> conditionals.equals [n, 0]
+    is_one -> conditionals.equals [n, 1]
     is_zero_or_one -> conditionals.or [is_zero, is_one]
 
     $define recursive_factorial
