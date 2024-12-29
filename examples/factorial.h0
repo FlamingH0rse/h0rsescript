@@ -33,13 +33,13 @@ $include h0, math, conditionals
             ]
     $end
 
-    $define return_one
+    $define set_return_to_one
         result > data [1]
     $end
 
     conditionals.run_if_else[
         is_zero_or_one,
-        return_one,
+        set_return_to_one,
         {},
         recursive_factorial,
         {n}
