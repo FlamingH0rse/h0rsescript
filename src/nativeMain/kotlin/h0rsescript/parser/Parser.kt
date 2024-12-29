@@ -80,23 +80,23 @@ object Parser {
     }
     private fun getFunctionDefNode(): FunctionDefNode {
         // KEYWORD, IDENTIFIER, BODY, KEYWORD
-        checkAndGet(TokenType.KEYWORD)
-        val name = checkAndGet(TokenType.IDENTIFIER)
+        consume(TokenType.KEYWORD)
+        val name = consume(TokenType.IDENTIFIER)
         val options: MutableMap<String, List<String>> = mutableMapOf()
 
         // Parse function options ($include, $mode, $parameters)
         while (currentToken()?.type == TokenType.KEYWORD && !listOf("\$define", "\$end", "\$return").contains(
                 currentToken()?.value)) {
-            val key = checkAndGet(TokenType.KEYWORD)
+            val key = consume(TokenType.KEYWORD)
             val values: MutableList<String> = mutableListOf()
 
 
             var caughtValues = false
             while(!caughtValues) {
-                val value: String = checkAndGet(TokenType.IDENTIFIER).value
+                val value: String = consume(TokenType.IDENTIFIER).value
                 values.add(value)
 
-                if (currentToken()?.type == TokenType.COMMA) checkAndGet(TokenType.COMMA)
+                if (currentToken()?.type == TokenType.COMMA) consume(TokenType.COMMA)
                 else caughtValues = true
             }
             options[key.value.removePrefix("\$")] = values
@@ -107,38 +107,38 @@ object Parser {
             val statement: ASTNode
             // Parse FunctionReturnNode
             if (currentToken()?.value == "\$return") {
-                checkAndGet(TokenType.KEYWORD, optionalValue = "\$return")
-                val returnValue = checkAndGet(*identifierOrLiteralStartTokens.toTypedArray())
+                consume(TokenType.KEYWORD, valueToMatch = "\$return")
+                val returnValue = consume(*identifierOrLiteralStartTokens.toTypedArray())
                 statement = FunctionReturnNode(getIdentifierOrLiteralNode(returnValue))
             }
             else statement = parseStatement()
             body.add(statement)
         }
-        checkAndGet(TokenType.KEYWORD, optionalValue = "\$end")
+        consume(TokenType.KEYWORD, valueToMatch = "\$end")
 
-        if ("log-function-defines" in Parser.options) println("${name.value} $options\n   $body")
+        if ("log-function-defines" in Parser.options) println("${name.value} $options\n" + body.map {"  $it"})
         return FunctionDefNode(name.value, options, body)
     }
     private fun getFunctionCallNode(): FunctionCallNode {
         // IDENTIFIER, OPEN_BRACKET, ...IDENTIFIER/STRING/NUMBER/BOOLEAN/ARRAY, CLOSE_BRACKET
 
         // Get function name
-        val name = checkAndGet(TokenType.QUALIFIED_IDENTIFIER, TokenType.IDENTIFIER)
+        val name = consume(TokenType.QUALIFIED_IDENTIFIER, TokenType.IDENTIFIER)
 
-        checkAndGet(TokenType.OPEN_BRACKET)
+        consume(TokenType.OPEN_BRACKET)
         val arguments: MutableList<ASTNode> = mutableListOf()
 
         // Get arguments
         while (currentToken()?.type != TokenType.CLOSE_BRACKET) {
 
-            val arg = checkAndGet(*identifierOrLiteralStartTokens.toTypedArray())
+            val arg = consume(*identifierOrLiteralStartTokens.toTypedArray())
             val argNode = getIdentifierOrLiteralNode(arg)
 
-            if (currentToken()?.type != TokenType.CLOSE_BRACKET) checkAndGet(TokenType.COMMA)
+            if (currentToken()?.type != TokenType.CLOSE_BRACKET) consume(TokenType.COMMA)
             arguments.add(argNode)
         }
         if ("log-function-calls" in options) println("${name.value} $arguments")
-        checkAndGet(TokenType.CLOSE_BRACKET)
+        consume(TokenType.CLOSE_BRACKET)
 
 
         return FunctionCallNode(name.value, arguments.toList())
@@ -152,12 +152,12 @@ object Parser {
             TokenType.OPEN_CURLY -> {
                 val elements = mutableListOf<ASTNode>()
                 while (currentToken()?.type != TokenType.CLOSE_CURLY) {
-                    val token = checkAndGet(TokenType.IDENTIFIER, TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN, TokenType.OPEN_CURLY)
+                    val token = consume(TokenType.IDENTIFIER, TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN, TokenType.OPEN_CURLY)
                     elements.add(getIdentifierOrLiteralNode(token))
-                    if (currentToken()?.type != TokenType.CLOSE_CURLY) checkAndGet(TokenType.COMMA)
+                    if (currentToken()?.type != TokenType.CLOSE_CURLY) consume(TokenType.COMMA)
                 }
                 // End of ARRAY
-                checkAndGet(TokenType.CLOSE_CURLY)
+                consume(TokenType.CLOSE_CURLY)
                 return LiteralNode(type = LiteralNode.LiteralType.ARRAY, list = elements)
             }
             else -> IdentifierNode("IF_YOU_READ_THIS_YOU_MESSED_UP") // Shouldn't happen lol
@@ -175,9 +175,9 @@ object Parser {
         var name = Token()
         // >, -> and <-> assignments
         if (currentToken()?.type != TokenType.ASSIGNMENT_OPERATOR) {
-            name = checkAndGet(TokenType.IDENTIFIER)
+            name = consume(TokenType.IDENTIFIER)
         }
-        val assignmentOperator = checkAndGet(TokenType.ASSIGNMENT_OPERATOR).value
+        val assignmentOperator = consume(TokenType.ASSIGNMENT_OPERATOR).value
         val assignmentType = assignmentTypes[assignmentOperator] ?: AssignmentNode.AssignmentType.VARIABLE
 
         // EMPTY and DELETE operations
@@ -186,10 +186,10 @@ object Parser {
             val values = mutableListOf<ASTNode>()
             var caughtValues = false
             while(!caughtValues) {
-                val token = checkAndGet(TokenType.IDENTIFIER)
+                val token = consume(TokenType.IDENTIFIER)
                 values.add(IdentifierNode(token.value))
 
-                if (currentToken()?.type == TokenType.COMMA) checkAndGet(TokenType.COMMA)
+                if (currentToken()?.type == TokenType.COMMA) consume(TokenType.COMMA)
                 else caughtValues = true
             }
 
@@ -204,13 +204,13 @@ object Parser {
     }
 
 
-    private fun checkAndGet(vararg types: TokenType, optionalValue: String? = null): Token {
+    private fun consume(vararg types: TokenType, valueToMatch: String? = null): Token {
         if ("log-tokens" in options) println(currentToken()?.type)
         val current = currentToken()
         if (current != null && current.type in types) {
-            if (optionalValue != null && current.value != optionalValue) {
+            if (valueToMatch != null && current.value != valueToMatch) {
                 // Throw UnexpectedTokenError
-                ErrorHandler.report(UnexpectedTokenError(current, *types, expectedValue = optionalValue))
+                ErrorHandler.report(UnexpectedTokenError(current, *types, expectedValue = valueToMatch))
             }
             pos++
             return current
