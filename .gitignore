@@ -128,6 +128,9 @@ hs_err_pid*
 # Cache of project
 .gradletasknamecache
 
+# Redundant files
+TokenizerOld.kt
+
 # Testing and concept files
 *.h0
 !examples/*
