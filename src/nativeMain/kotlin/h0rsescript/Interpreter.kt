@@ -90,7 +90,7 @@ class Interpreter(
                 val ref = node.name
 
                 // Pre-defined identifiers
-                if (ref == "null") return H0Type.NULL()
+                if (ref == "NULL") return H0Type.NULL()
 
                 // Gets variable from last available scope
                 val foundVar = getFromLastScope(ref)

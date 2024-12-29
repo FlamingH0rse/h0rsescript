@@ -12,7 +12,7 @@ sealed class H0Type {
     }
 
     data class BOOL(var value: Boolean) : H0Type() {
-        override fun toString() = value.toString()
+        override fun toString() = value.toString().uppercase()
     }
 
     data class ARRAY(var elements: List<H0Type>) : H0Type() {
@@ -29,7 +29,7 @@ sealed class H0Type {
     }
 
     data class NULL(var value: Any? = null): H0Type() {
-        override fun toString() = "null"
+        override fun toString() = "NULL"
     }
     companion object {
         fun from(value: Any?): H0Type = when (value) {
