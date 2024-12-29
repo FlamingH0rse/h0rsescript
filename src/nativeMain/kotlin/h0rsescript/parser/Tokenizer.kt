@@ -91,4 +91,13 @@ object Tokenizer {
 
         return tokens
     }
+    fun getLineCol(pos: Int): Pair<Int, Int> {
+        val subStr = src.substring(0, pos)
+        val lines = subStr.split('\n')
+
+        val line = lines.size
+        val column = lines.last().length
+
+        return Pair(line, column)
+    }
 }
