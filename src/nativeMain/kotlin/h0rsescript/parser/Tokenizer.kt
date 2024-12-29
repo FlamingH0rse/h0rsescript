@@ -4,93 +4,255 @@ import me.flaming.h0rsescript.core.ErrorHandler
 import me.flaming.h0rsescript.errors.InvalidTokenError
 
 object Tokenizer {
-    private const val keywordPrefixPattern = """\$"""
-    private val keywords = listOf("define", "end", "parameters", "return", "mode", "include")
+    private const val KPREFIX = '$'
+    private val keywords = listOf("define", "end", "parameters", "return", "mode", "include").map { k -> "$KPREFIX$k"}
+    private val booleans = listOf("TRUE", "FALSE")
     private val symbols = listOf("->", "<->", ">", "<-", "<")
 
-    // Follows priority of matching
-    val tokenPatterns = mapOf(
-        TokenType.KEYWORD to keywords.joinToString("|") { k -> "$keywordPrefixPattern$k" },
-        TokenType.BOOLEAN to """TRUE|FALSE""",
-        TokenType.NUMBER to """-?\d+(\.\d+)*""",
-        TokenType.STRING to """"([^"\\]|\\.)*"""",
+    var src = ""
+    private var position = 0
 
-        TokenType.QUALIFIED_IDENTIFIER to """[a-zA-Z_][a-zA-Z0-9_.]*[a-zA-Z0-9_]""",
-
-        // Separate check for this in tokenize()
-        TokenType.IDENTIFIER to """[a-zA-Z_][a-zA-Z0-9_]*""",
-
-        TokenType.ASSIGNMENT_OPERATOR to symbols.joinToString("|"),
-
-        TokenType.OPEN_CURLY to """\{""",
-        TokenType.CLOSE_CURLY to """\}""",
-        TokenType.OPEN_BRACKET to """\[""",
-        TokenType.CLOSE_BRACKET to """]""",
-
-        TokenType.COMMA to """,""",
-//        TokenType.NEWLINE to """\n""",
-        TokenType.WHITESPACE to """\s+""",
-        TokenType.COMMENT to """#.*"""
-    )
-
-    // Create tokens
     fun tokenize(input: String): MutableList<Token> {
-        val tokens: MutableList<Token> = mutableListOf()
+        src = input
+        val tokens = mutableListOf<Token>()
 
-        var line = 1
-        var column = 0
-        var position = 0
+        val consumeToken = { token: Token ->
+            tokens.add(token)
+            position += token.value.length
+        }
 
         while (position < input.length) {
-            var matched = false
+            val char = input[position]
+            val startPos = position
 
-            // Check for all pattern matches
-            for ((type, pattern) in tokenPatterns) {
-                val regex = Regex(pattern)
-                val match = regex.find(input, position)
+            // Handle identifiers, and booleans
+            if (char.isLetter() || char == '_') {
+                val value = getIdentifier()
+                var tokenType = if (value.contains('.')) TokenType.QUALIFIED_IDENTIFIER else TokenType.IDENTIFIER
 
-                // Check if match exists at current position
-                if (match != null && match.range.first == position) {
-                    // Add token to list
-                    val value = match.value
+                // Handle booleans
+                if (booleans.contains(value)) tokenType = TokenType.BOOLEAN
 
-                    // Check if match is a normal IDENTIFIER, and change it to that
-                    val matchToken =
-                        if (type == TokenType.QUALIFIED_IDENTIFIER && !value.contains('.'))
-                            Token(TokenType.IDENTIFIER, value, Pair(line, column), position)
-                        else
-                            Token(type, value, Pair(line, column), position)
-
-                    tokens.add(matchToken)
-
-                    // Update line position
-                    if (value.contains('\n')) {
-                        val newLines = Regex("\n").findAll(value)
-                        val lastNewLineIndex = newLines.last().range.last
-
-                        line += newLines.count()
-                        column = value.substring(lastNewLineIndex).length
-                    } else {
-                        column += value.length
-                    }
-
-                    // Update absolute position
-                    position += match.value.length
-
-                    // Move to next position
-                    matched = true
-                    break
-                }
+                tokens.add(Token(tokenType, value, position = startPos))
             }
 
-            if (!matched) {
-                // Throw InvalidTokenError
-                ErrorHandler.report(InvalidTokenError(input[position], line, column))
+            // Handle keywords
+            else if (char == KPREFIX) {
+                tokens.add(Token(TokenType.KEYWORD, getKeyword(), position = startPos))
+            }
+
+            // Handle assignment operators
+            else if (isAssignmentOpChar()) {
+                tokens.add(Token(TokenType.ASSIGNMENT_OPERATOR, getAssignmentOp(), position = startPos))
+            }
+
+            // Handle strings and numbers
+            else if (char == '"') {
+                tokens.add(Token(TokenType.STRING, getStringLiteral(), position = startPos))
+            }
+            else if (char == '-' || char.isDigit()) {
+                tokens.add(Token(TokenType.NUMBER, getNumberLiteral(), position = startPos))
+            }
+
+            // Handle single character tokens like brackets and commas and whitespaces
+            else if (char == '[') {
+                consumeToken(Token(TokenType.OPEN_BRACKET, "[", position = startPos))
+            } else if (char == ']') {
+                consumeToken(Token(TokenType.CLOSE_BRACKET, "]", position = startPos))
+            } else if (char == '{') {
+                consumeToken(Token(TokenType.OPEN_CURLY, "{", position = startPos))
+            } else if (char == '}') {
+                consumeToken(Token(TokenType.CLOSE_CURLY, "}", position = startPos))
+            } else if (char == ',') {
+                consumeToken(Token(TokenType.COMMA, ",", position = startPos))
+            } else if (char.isWhitespace()) {
+                position++
+            }
+
+            // Comments
+            else if (char == '#') {
+                tokens.add(Token(TokenType.COMMENT, getComment(), position = startPos))
+            }
+
+            // Throw InvalidTokenError
+            else {
+                ErrorHandler.report(InvalidTokenError(src[position], getLineCol(position).first, getLineCol(position).second))
+            }
+        }
+        return tokens
+    }
+
+    // Goofy ahh code
+    private fun isAssignmentOpChar(): Boolean {
+        val subStr = src.substring(position)
+        return subStr.startsWith("<->") ||
+                subStr.startsWith("->") ||
+                subStr.startsWith("<-") ||
+                subStr.startsWith(">") ||
+                subStr.startsWith("<")
+    }
+    private fun getAssignmentOp(): String {
+        val subStr = src.substring(position)
+        var operatorValue = ""
+
+        // Goofy ahh code v2
+        if (subStr.startsWith("<->")) {
+            operatorValue = "<->"
+            position += 3
+        } else if (subStr.startsWith("->")) {
+            operatorValue += "->"
+            position += 2
+        } else if (subStr.startsWith("<-")) {
+            operatorValue += "<-"
+            position += 2
+        } else if (subStr.startsWith(">")) {
+            operatorValue += ">"
+            position += 1
+        } else if (subStr.startsWith("<")) {
+            operatorValue += "<"
+            position += 1
+        } else {
+            ErrorHandler.report(InvalidTokenError(src[position], getLineCol(position).first, getLineCol(position).second))
+        }
+
+        return operatorValue
+    }
+
+    private fun getStringLiteral(): String {
+        val startPos = position
+        var literalValue = ""
+
+        // Start double quote "
+        position++
+
+        // Get all characters after opening ", until ending " or EOF
+        while (!endOfSrc() && src[position] != '"') {
+            literalValue += src[position]
+            position++
+
+            // Handle escape sequences
+            if (src[position] == '\\') {
+                literalValue += src[position++]
             }
         }
 
-        return tokens
+        // Ending double quote ", throw error if EOF
+        if (endOfSrc()) {
+            val err = InvalidTokenError(src[startPos], getLineCol(startPos).first, getLineCol(startPos).second)
+            err.message += "\nUnterminated string literal"
+            ErrorHandler.report(err)
+        }
+        position++
+
+        return literalValue
     }
+
+    private fun getNumberLiteral(): String {
+        // Get first digit or negative symbol
+        var literalValue = "${src[position]}"
+        var isDecimalValid: Boolean? = null
+
+        // Making decimal usage valid after 1 digit
+        if (src[position].isDigit()) isDecimalValid = true
+
+        position++
+
+        // Get all numbers (and 1 decimal point)
+        while (!endOfSrc() && (src[position].isDigit() || (src[position] == '.' && isDecimalValid == true))) {
+            literalValue += src[position]
+
+            // Making decimal usage valid after 1 digit
+            if (isDecimalValid == null) isDecimalValid = true
+
+            // Making decimal usage invalid after 1 use
+            if (src[position] == '.') {
+                isDecimalValid = false
+            }
+
+            position++
+        }
+
+        // Remove decimal if no number after it
+        if (literalValue.endsWith('.')) {
+            literalValue = literalValue.removeSuffix(".")
+            position--
+        }
+
+        return literalValue
+    }
+
+    private fun getIdentifier(): String {
+        // Get first letter or underscore
+        var value = "${src[position]}"
+        position++
+
+        var endOfIdent = false
+        while (!endOfIdent) {
+            // Get current character, except .
+            if (!endOfSrc() && isValidIdentChar(src[position])) {
+                value += src[position]
+                position++
+            }
+            // Get . only if it is followed by another character
+            else if (!endOfSrc() && src[position] == '.' && (src.getOrNull(position + 1) != null && isValidIdentChar(src[position + 1]))) {
+                value += src[position]
+                position++
+            }
+            else endOfIdent = true
+        }
+
+        return value
+    }
+
+    private fun getKeyword(): String {
+        // Skip first $
+        val startPos = position
+        var keyword = "${src[position]}"
+        position++
+
+        // Get only letters
+        while (!endOfSrc() && src[position].isLetter()) {
+            keyword += src[position]
+            position++
+        }
+
+        // Throw error if keyword is invalid
+        if (keyword !in keywords) {
+            val err = InvalidTokenError(src[startPos], getLineCol(startPos).first, getLineCol(startPos).second)
+            err.message += "\nInvalid keyword '$keyword' used"
+            ErrorHandler.report(err)
+        }
+
+        return keyword
+    }
+
+    private fun getComment(): String {
+        var comment = ""
+        while (endOfSrc() || src[position] != '\n') {
+            comment += src[position]
+            position++
+        }
+        return comment
+    }
+
+    private fun isValidIdentChar(char: Char): Boolean {
+        val disallowedChars = setOf(
+            KPREFIX,
+            '<',
+            '-',
+            '>',
+            '[', ']',
+            '{', '}',
+            ',',
+            '"',
+            '\\',
+            '.'
+        )
+
+        return !disallowedChars.contains(char) && !char.isWhitespace()
+    }
+    private fun endOfSrc() = position >= src.length
+
     fun getLineCol(pos: Int): Pair<Int, Int> {
         val subStr = src.substring(0, pos)
         val lines = subStr.split('\n')
