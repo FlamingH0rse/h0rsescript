@@ -258,7 +258,7 @@ object Tokenizer {
         val lines = subStr.split('\n')
 
         val line = lines.size
-        val column = lines.last().length
+        val column = lines.last().length + 1
 
         return Pair(line, column)
     }
