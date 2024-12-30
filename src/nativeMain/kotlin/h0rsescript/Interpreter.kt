@@ -13,7 +13,7 @@ import me.flaming.h0rsescript.parser.Tokenizer
 import kotlin.time.measureTime
 
 class Interpreter(
-    private val rawContent: String,
+    val rawContent: String,
     private val options: Map<String, List<String>>,
     private val programArgs: List<String>
 ) {
