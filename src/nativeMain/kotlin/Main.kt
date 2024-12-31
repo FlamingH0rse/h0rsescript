@@ -11,6 +11,7 @@ import kotlin.time.TimeSource
 
 const val LANG_NAME = "h0rsescript"
 const val LANG_NAME_SHORT = "h0"
+const val LANG_FILE_EXTENSION = "h0"
 const val VERSION = "0.1.0"
 
 var interpInstance: Interpreter? = null
@@ -43,25 +44,28 @@ fun main(args: Array<String>) {
 
         // Parse CLI arguments
         val arguments = parseArguments(args)
-
         val options = arguments.options
         val fileName = arguments.fileName
         val programArgs = arguments.programArgs
 
         // Check version
-        if (options.containsKey("version")) return println("$LANG_NAME current version: $VERSION")
+        if (options.containsKey("version")) return logger.logln("$LANG_NAME current version: $VERSION")
         // Display available options
-        if (options.containsKey("help")) return println(commandsHelp)
+        if (options.containsKey("help")) return logger.logln(commandsHelp)
 
-        // Run .h0 file
-        if (fileName == "") return println("Error: Please specify file name to run")
+        // Read .h0 file
+        if (fileName == "") return logger.log("Please specify file name to run", Logger.Log.ERROR)
+
         val filePath = fileName.toPath()
+        val fileExtension = filePath.name.substringAfterLast('.')
         val fileContent = readFileContent(filePath)
+        if (fileExtension != LANG_FILE_EXTENSION) logger.logln("Use recommended file extension '.h0'", Logger.Log.WARNING)
 
         // Create logger instance with log file path
         if ("log-file" in options) {
-            val logFileName = options["log-file"]!![0] + ".log"
-            logger = Logger(logFileName.toPath())
+            val logFileName = (if (options["log-file"]?.get(0).isNullOrEmpty()) fileName else options["log-file"]!![0]).removeSuffix(".log")
+            val logFilePath = ("$logFileName.log").toPath()
+            logger = Logger(logFilePath)
         }
 
         // Run interpreter
@@ -101,23 +105,23 @@ private fun parseArguments(args: Array<String>): Arguments {
     val programArgs = mutableListOf<String>()
 
 
-    var fileName: String? = null
+    var fileName = ""
 
     for (arg in args) {
         // Parse program options (--option=value1,value2)
         if (arg.startsWith("--")) {
             val keyValue = arg.split('=')
-            val key = keyValue[0].removePrefix("--")
-            val values = (keyValue.getOrNull(1)?:"").split(',')
+            val key = keyValue[0].removePrefix("--").trim()
+            val values = (keyValue.getOrNull(1)?:"").split(',').map(String::trim)
             options[key] = values
         }
         // Parse program options without values (-help, -version)
         else if (arg.startsWith("-")) {
-            val option = arg.removePrefix("-")
+            val option = arg.removePrefix("-").trim()
             options[option] = listOf()
         }
         // Parse file name (main.h0)
-        else if (fileName == null) fileName = arg
+        else if (fileName == "") fileName = arg
         // Parse program arguments
         else programArgs.add(arg)
     }
