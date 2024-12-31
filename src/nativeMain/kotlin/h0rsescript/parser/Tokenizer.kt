@@ -147,6 +147,7 @@ object Tokenizer {
         return literalValue
     }
 
+    // -?[0-9]+(\.[0-9]+)?
     private fun getNumberLiteral(): String {
         // Get first digit or negative symbol
         var literalValue = "${src[position]}"
@@ -181,6 +182,7 @@ object Tokenizer {
         return literalValue
     }
 
+    // [a-zA-Z_][a-zA-Z0-9_]*
     private fun getIdentifier(): String {
         // Get first letter or underscore
         var value = "${src[position]}"
@@ -235,22 +237,8 @@ object Tokenizer {
         return comment
     }
 
-    private fun isValidIdentChar(char: Char): Boolean {
-        val disallowedChars = setOf(
-            KPREFIX,
-            '<',
-            '-',
-            '>',
-            '[', ']',
-            '{', '}',
-            ',',
-            '"',
-            '\\',
-            '.'
-        )
+    private fun isValidIdentChar(char: Char) = char.isLetterOrDigit() || char == '_'
 
-        return !disallowedChars.contains(char) && !char.isWhitespace()
-    }
     private fun endOfSrc() = position >= src.length
 
     fun getLineCol(pos: Int): Pair<Int, Int> {
