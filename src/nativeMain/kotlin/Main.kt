@@ -70,9 +70,19 @@ fun main(args: Array<String>) {
         timeStart = TimeSource.Monotonic.markNow()
         interpInstance = Interpreter(fileContent, options, programArgs)
         interpInstance!!.run()
+
+        // Exit process after execution
+        exit(0)
     }
 }
 
+fun exit(status: Int): Nothing {
+    // Create log file
+    logger.createLogFile()
+
+    // Exit process
+    exitProcess(status)
+}
 private fun readFileContent(filePath: Path) : String {
     try {
         val fileContent = FileSystem.SYSTEM.read(filePath) {
@@ -82,7 +92,7 @@ private fun readFileContent(filePath: Path) : String {
     } catch (e: IOException) {
         logger.logln("Error reading file: ${e.message}", Logger.Log.ERROR)
 
-        exitProcess(1)
+        exit(1)
     }
 }
 
