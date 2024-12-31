@@ -53,18 +53,16 @@ fun main(args: Array<String>) {
         // Display available options
         if (options.containsKey("help")) return println(commandsHelp)
 
-        // Create logger instance
-        if ("log-file" in options) {
-            val logFileName = options["log-file"]!![0] + ".log"
-            logger = Logger(logFileName.toPath())
-            println("${logFileName.toPath()} ok")
-        }
-        else logger = Logger()
-
         // Run .h0 file
         if (fileName == "") return println("Error: Please specify file name to run")
         val filePath = fileName.toPath()
         val fileContent = readFileContent(filePath)
+
+        // Create logger instance with log file path
+        if ("log-file" in options) {
+            val logFileName = options["log-file"]!![0] + ".log"
+            logger = Logger(logFileName.toPath())
+        }
 
         // Run interpreter
         timeStart = TimeSource.Monotonic.markNow()
