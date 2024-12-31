@@ -31,7 +31,7 @@ object Tokenizer {
                 var tokenType = if (value.contains('.')) TokenType.QUALIFIED_IDENTIFIER else TokenType.IDENTIFIER
 
                 // Handle booleans
-                if (booleans.contains(value)) tokenType = TokenType.BOOLEAN
+                if (value in booleans) tokenType = TokenType.BOOLEAN
 
                 tokens.add(Token(tokenType, value, position = startPos))
             }
