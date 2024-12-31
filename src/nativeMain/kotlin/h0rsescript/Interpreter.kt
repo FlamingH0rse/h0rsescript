@@ -2,14 +2,14 @@ package me.flaming.h0rsescript
 
 import me.flaming.h0rsescript.ast.*
 import me.flaming.h0rsescript.core.ErrorHandler
-import me.flaming.h0rsescript.core.H0Type
-import me.flaming.h0rsescript.core.MethodHandler
 import me.flaming.h0rsescript.errors.IllegalAssignmentError
 import me.flaming.h0rsescript.errors.ReferenceError
 import me.flaming.h0rsescript.parser.Parser
 import me.flaming.h0rsescript.parser.Token
 import me.flaming.h0rsescript.parser.TokenType
 import me.flaming.h0rsescript.parser.Tokenizer
+import me.flaming.h0rsescript.runtime.H0Type
+import me.flaming.h0rsescript.runtime.MethodHandler
 import me.flaming.logger
 import kotlin.time.measureTime
 

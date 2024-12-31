@@ -1,5 +1,6 @@
-package me.flaming.h0rsescript.core
+package me.flaming.h0rsescript.runtime
 
+import me.flaming.h0rsescript.core.ErrorHandler
 import me.flaming.h0rsescript.errors.TypeError
 
 abstract class Namespace {

@@ -1,8 +1,9 @@
-package me.flaming.h0rsescript.core
+package me.flaming.h0rsescript.runtime
 
 import me.flaming.LANG_NAME_SHORT
-import me.flaming.h0rsescript.core.libraries.*
+import me.flaming.h0rsescript.core.ErrorHandler
 import me.flaming.h0rsescript.errors.ReferenceError
+import me.flaming.h0rsescript.runtime.libraries.*
 
 class MethodHandler(namespaces: List<String>) {
     companion object {

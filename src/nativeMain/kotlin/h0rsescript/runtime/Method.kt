@@ -1,4 +1,4 @@
-package me.flaming.h0rsescript.core
+package me.flaming.h0rsescript.runtime
 
 import kotlin.reflect.KClass
 

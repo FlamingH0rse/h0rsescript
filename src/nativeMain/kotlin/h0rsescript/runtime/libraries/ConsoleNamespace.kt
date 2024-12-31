@@ -1,8 +1,8 @@
-package me.flaming.h0rsescript.core.libraries
+package me.flaming.h0rsescript.runtime.libraries
 
-import me.flaming.h0rsescript.core.H0Type
-import me.flaming.h0rsescript.core.Method
-import me.flaming.h0rsescript.core.Namespace
+import me.flaming.h0rsescript.runtime.H0Type
+import me.flaming.h0rsescript.runtime.Method
+import me.flaming.h0rsescript.runtime.Namespace
 import me.flaming.logger
 
 object ConsoleNamespace : Namespace() {

@@ -1,10 +1,10 @@
-package me.flaming.h0rsescript.core.libraries
+package me.flaming.h0rsescript.runtime.libraries
 
 import me.flaming.h0rsescript.core.ErrorHandler
-import me.flaming.h0rsescript.core.H0Type
-import me.flaming.h0rsescript.core.Method
-import me.flaming.h0rsescript.core.Namespace
 import me.flaming.h0rsescript.errors.ParsingError
+import me.flaming.h0rsescript.runtime.H0Type
+import me.flaming.h0rsescript.runtime.Method
+import me.flaming.h0rsescript.runtime.Namespace
 
 object NumberNamespace : Namespace() {
     override val methods: Map<String, Method> = mapOf(
