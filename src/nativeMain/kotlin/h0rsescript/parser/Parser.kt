@@ -1,8 +1,10 @@
 package me.flaming.h0rsescript.parser
 
+import me.flaming.h0rsescript.Logger
 import me.flaming.h0rsescript.ast.*
 import me.flaming.h0rsescript.core.ErrorHandler
 import me.flaming.h0rsescript.errors.UnexpectedTokenError
+import me.flaming.logger
 
 object Parser {
     private val nodes: MutableList<ASTNode> = mutableListOf()
@@ -116,7 +118,7 @@ object Parser {
         }
         consume(TokenType.KEYWORD, valueToMatch = "\$end")
 
-        if ("log-function-defines" in Parser.options) println("${name.value} $options\n" + body.map {"  $it"})
+        if ("log-function-defines" in Parser.options) logger.logln("${name.value} $options\n" + body.map {"  $it"}, Logger.Log.INFO)
         return FunctionDefNode(name.value, options, body)
     }
     private fun getFunctionCallNode(): FunctionCallNode {
@@ -137,7 +139,7 @@ object Parser {
             if (currentToken()?.type != TokenType.CLOSE_BRACKET) consume(TokenType.COMMA)
             arguments.add(argNode)
         }
-        if ("log-function-calls" in options) println("${name.value} $arguments")
+        if ("log-function-calls" in options) logger.logln("${name.value} $arguments", Logger.Log.INFO)
         consume(TokenType.CLOSE_BRACKET)
 
 
@@ -205,7 +207,7 @@ object Parser {
 
 
     private fun consume(vararg types: TokenType, valueToMatch: String? = null): Token {
-        if ("log-tokens" in options) println(currentToken()?.type)
+        if ("log-tokens" in options) logger.logln(currentToken()?.type.toString(), Logger.Log.INFO)
         val current = currentToken()
         if (current != null && current.type in types) {
             if (valueToMatch != null && current.value != valueToMatch) {

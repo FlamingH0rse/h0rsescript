@@ -10,6 +10,7 @@ import me.flaming.h0rsescript.parser.Parser
 import me.flaming.h0rsescript.parser.Token
 import me.flaming.h0rsescript.parser.TokenType
 import me.flaming.h0rsescript.parser.Tokenizer
+import me.flaming.logger
 import kotlin.time.measureTime
 
 class Interpreter(
@@ -29,7 +30,7 @@ class Interpreter(
         // Tokenize the raw code
         var tokens: MutableList<Token>
         val tokenizeTime = measureTime { tokens = Tokenizer.tokenize(rawContent) }
-        if ("log-interp-times" in options) println("tokenize() took ${tokenizeTime.inWholeMilliseconds}ms")
+        if ("log-interp-times" in options) logger.logln("tokenize() took ${tokenizeTime.inWholeMilliseconds}ms", Logger.Log.INFO)
 
         // Remove whitespaces and comments
         tokens = tokens.filter { t -> t.type != TokenType.COMMENT }.toMutableList()
@@ -38,7 +39,7 @@ class Interpreter(
         // Parse all tokens to ASTNode's
         val nodes: MutableList<ASTNode>
         val parseTime = measureTime { nodes = Parser.parse(tokens, options["parser-options"] ?: listOf()).toMutableList() }
-        if ("log-interp-times" in options) println("parse() took ${parseTime.inWholeMilliseconds}ms")
+        if ("log-interp-times" in options) logger.logln("parse() took ${parseTime.inWholeMilliseconds}ms", Logger.Log.INFO)
 
         // Add a main function call
         for (node in nodes) {
@@ -60,7 +61,7 @@ class Interpreter(
 
         // Execute the program
         val interpreterTime = measureTime { nodes.forEach { evaluateNode(it) } }
-        if ("log-interp-times" in options) println("evaluate() took ${interpreterTime.inWholeMilliseconds}ms")
+        if ("log-interp-times" in options) logger.logln("evaluate() took ${interpreterTime.inWholeMilliseconds}ms", Logger.Log.INFO)
 
     }
 

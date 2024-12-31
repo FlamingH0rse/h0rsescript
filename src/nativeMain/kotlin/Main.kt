@@ -1,23 +1,28 @@
 package me.flaming
 
 import me.flaming.h0rsescript.Interpreter
+import me.flaming.h0rsescript.Logger
 import okio.FileSystem
 import okio.IOException
 import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.system.exitProcess
+import kotlin.time.TimeSource
 
 const val LANG_NAME = "h0rsescript"
 const val LANG_NAME_SHORT = "h0"
 const val VERSION = "0.1.0"
 
 var interpInstance: Interpreter? = null
+var logger = Logger()
+var timeStart = TimeSource.Monotonic.markNow()
 
 val optionsList = mapOf(
     "-version" to "Display current h0 version",
     "-help" to "Display available commands and flags",
     "--parser-options=" to "Pass options for the parser\nAvailable values: [log-tokens, log-function-defines, log-function-calls]",
-    "-log-interp-times" to "Display the times taken by the tokenizer, parser and interpreter"
+    "-log-interp-times" to "Display the times taken by the tokenizer, parser and interpreter",
+    "--log-file=" to "Log errors, warnings and info to a file"
 )
 
 val commandsHelp = "Usage: $LANG_NAME_SHORT [options] <file_name> [arguments]\n\nAvailable options:" + optionsList.map { (c, d)-> "$c      $d"}.joinToString("\n")
@@ -36,7 +41,6 @@ fun main(args: Array<String>) {
         }
     } else {
 
-
         // Parse CLI arguments
         val arguments = parseArguments(args)
 
@@ -49,12 +53,21 @@ fun main(args: Array<String>) {
         // Display available options
         if (options.containsKey("help")) return println(commandsHelp)
 
+        // Create logger instance
+        if ("log-file" in options) {
+            val logFileName = options["log-file"]!![0] + ".log"
+            logger = Logger(logFileName.toPath())
+            println("${logFileName.toPath()} ok")
+        }
+        else logger = Logger()
+
         // Run .h0 file
         if (fileName == "") return println("Error: Please specify file name to run")
         val filePath = fileName.toPath()
         val fileContent = readFileContent(filePath)
 
         // Run interpreter
+        timeStart = TimeSource.Monotonic.markNow()
         interpInstance = Interpreter(fileContent, options, programArgs)
         interpInstance!!.run()
     }
@@ -67,7 +80,7 @@ private fun readFileContent(filePath: Path) : String {
         }
         return fileContent
     } catch (e: IOException) {
-        println("Error reading file: ${e.message}")
+        logger.logln("Error reading file: ${e.message}", Logger.Log.ERROR)
 
         exitProcess(1)
     }
