@@ -133,6 +133,7 @@ TokenizerOld.kt
 
 # Testing and concept files
 *.h0
-!examples/*
+!h0rsescript-main/examples/*
 test.js
 h0.txt
+bin/
