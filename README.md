@@ -160,7 +160,7 @@ There also exists a `conditionals.run_if_else` method.
 
 #### **Loops**
 There are no actual *loops* in h0rsescript, you can achieve similar behaviour through recursively running a function.<br>
-See [examples](examples) for a better understanding.
+See [examples](h0rsescript-main/examples) for a better understanding.
 
 ```py
 $define main
