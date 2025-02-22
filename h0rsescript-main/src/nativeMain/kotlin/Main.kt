@@ -7,6 +7,7 @@ import okio.FileSystem
 import okio.IOException
 import okio.Path
 import okio.Path.Companion.toPath
+import kotlin.experimental.ExperimentalNativeApi
 import kotlin.system.exitProcess
 import kotlin.time.TimeSource
 
@@ -22,13 +23,16 @@ var timeStart = TimeSource.Monotonic.markNow()
 val optionsList = mapOf(
     "-version" to "Display current h0 version",
     "-help" to "Display available commands and flags",
+    "-dev" to "Passes all dev arguments to the program",
     "--parser-options=" to "Pass options for the parser\nAvailable values: [log-tokens, log-function-defines, log-function-calls]",
     "-log-interp-times" to "Display the times taken by the tokenizer, parser and interpreter",
-    "--log-file=" to "Log errors, warnings and info to a file"
+    "--log-file=" to "Log errors, warnings and info to a file",
+    "--libraries-path=" to "Specify a directory where your h0rsescript libraries are stored\nDefault: \"\$HOME/.h0/bin/libraries\""
 )
 
 val commandsHelp = "Usage: $LANG_NAME_SHORT [options] <file_name> [arguments]\n\nAvailable options:" + optionsList.map { (c, d)-> "$c      $d"}.joinToString("\n")
 
+@OptIn(ExperimentalNativeApi::class)
 fun main(args: Array<String>) {
     if (args.isEmpty()) {
         println("Welcome to $LANG_NAME v$VERSION")
@@ -47,9 +51,25 @@ fun main(args: Array<String>) {
 
         // Parse CLI arguments
         val arguments = parseArguments(args)
-        val options = arguments.options
+        val options = arguments.options.toMutableMap()
         val fileName = arguments.fileName
         val programArgs = arguments.programArgs
+
+        // Check for -dev option for me :)
+        if ("dev" in options) {
+            val devBinFolder = when (Platform.osFamily) {
+                OsFamily.WINDOWS -> "E:/Projects/IntelliJ Projects/h0rsescript/bin".toPath()
+                OsFamily.LINUX -> "~/Projects/IntelliJ Projects/h0rsescript/bin".toPath()
+                else -> "I/don't/use/that/os/yet?/".toPath()
+            }
+
+            val librariesDirPath = "$devBinFolder/libraries".toPath()
+            val logFilePath = "$devBinFolder/last-log.txt".toPath()
+
+            options["log-interp-times"] = listOf()
+            options["libraries-path"] = listOf(librariesDirPath.toString())
+            options["log-file"] = listOf(logFilePath.toString())
+        }
 
         // Check version
         if (options.containsKey("version")) return logger.logln("$LANG_NAME current version: $VERSION")
@@ -70,6 +90,13 @@ fun main(args: Array<String>) {
             val logFilePath = ("$logFileName.log").toPath()
             logger = Logger(logFilePath)
         }
+
+        // Load libraries
+        val libsDirPath = options.getOrElse("libraries-path") { listOf() }.getOrNull(0)
+
+        if (libsDirPath != null) LibraryHandler.LIBS_PATH = libsDirPath.toPath()
+
+        LibraryHandler.loadLibraries()
 
         // Run interpreter
         timeStart = TimeSource.Monotonic.markNow()
@@ -115,7 +142,7 @@ private fun parseArguments(args: Array<String>): Arguments {
         if (arg.startsWith("--")) {
             val keyValue = arg.split('=')
             val key = keyValue[0].removePrefix("--").trim()
-            val values = (keyValue.getOrNull(1)?:"").split(',').map(String::trim)
+            val values = (keyValue.getOrElse(1, { "" })).split(',').map(String::trim)
             options[key] = values
         }
         // Parse program options without values (-help, -version)
@@ -125,8 +152,8 @@ private fun parseArguments(args: Array<String>): Arguments {
         }
         // Parse file name (main.h0)
         else if (fileName == "") fileName = arg
-        // Parse program arguments
+        // Parse program arguments (arguments for the h0 program)
         else programArgs.add(arg)
     }
-    return Arguments(options, fileName ?: "", programArgs)
+    return Arguments(options, fileName, programArgs)
 }
