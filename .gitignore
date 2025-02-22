@@ -117,6 +117,7 @@ hs_err_pid*
 
 ### Gradle template
 .gradle
+.kotlin
 
 # Note that you may need to exclude by hand other folders
 # named build if necessary (e.g., in src/)
