@@ -4,7 +4,10 @@ import kotlinx.cinterop.*
 import me.flaming.logger
 import okio.FileSystem
 import okio.Path.Companion.toPath
-import platform.windows.*
+import platform.windows.GetLastError
+import platform.windows.GetProcAddress
+import platform.windows.HMODULE
+import platform.windows.LoadLibraryA
 
 @OptIn(ExperimentalForeignApi::class)
 typealias getMethodsFuncSignature = CPointer<CFunction<() -> CPointer<ByteVar>>>
@@ -13,14 +16,13 @@ typealias getNameFuncSignature = CPointer<CFunction<() -> CPointer<ByteVar>>>
 
 @OptIn(ExperimentalForeignApi::class)
 object LibraryHandler {
-//    val LIBS_PATH = "/home/flamingh0rse/Projects/IntelliJ-Projects/h0rsescript/src/nativeInterop/cinterop"
-    val LIBS_PATH = "E:\\Projects\\IntelliJ Projects\\h0rsescript\\h0rsescript-libs\\build"
+    var LIBS_PATH = "C:/Program Files/h0rsescript/bin/libraries".toPath()
     fun loadLibraries() {
         // Read libs directory
         val validLibExts = setOf ("so", "dll")
-        var libraries = FileSystem.SYSTEM.listOrNull(LIBS_PATH.toPath()) ?: listOf()
+        var libraries = FileSystem.SYSTEM.listOrNull(LIBS_PATH) ?: listOf()
         libraries = libraries.filter { it.toString().substringAfterLast(".") in validLibExts }
-        logger.logln("Found libraries: $libraries")
+        logger.logln("Found libraries: $libraries at $LIBS_PATH")
 
         // Load the DLLs for windows
         // Load libraries
