@@ -84,7 +84,7 @@ Temporary Items
 # Exclude non-user-specific stuff
 !.idea/.name
 !.idea/codeInsightSettings.xml
-!.idea/codeStyles/
+#!.idea/codeStyles/
 !.idea/copyright/
 !.idea/dataSources.xml
 !.idea/detekt.xml
