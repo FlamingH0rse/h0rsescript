@@ -1,9 +1,9 @@
 plugins {
-    kotlin("multiplatform") version "2.0.21"
+    kotlin("multiplatform") version "2.1.10"
 }
 
 group = "me.flaming"
-version = "1.0.0"
+version = "0.0.1"
 
 repositories {
     mavenCentral()
@@ -39,6 +39,6 @@ kotlin {
 }
 
 tasks.withType<Wrapper> {
-    gradleVersion = "8.5"
+    gradleVersion = "8.10"
     distributionType = Wrapper.DistributionType.BIN
 }
