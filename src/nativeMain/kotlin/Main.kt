@@ -12,7 +12,7 @@ import kotlin.time.TimeSource
 const val LANG_NAME = "h0rsescript"
 const val LANG_NAME_SHORT = "h0"
 const val LANG_FILE_EXTENSION = "h0"
-const val VERSION = "0.1.0"
+const val VERSION = "0.0.1"
 
 var interpInstance: Interpreter? = null
 var logger = Logger()
