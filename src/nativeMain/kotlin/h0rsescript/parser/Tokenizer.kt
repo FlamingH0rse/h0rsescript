@@ -4,10 +4,6 @@ import me.flaming.h0rsescript.core.ErrorHandler
 import me.flaming.h0rsescript.errors.InvalidTokenError
 
 object Tokenizer {
-    private const val KPREFIX = '$'
-    private val keywords = listOf("define", "end", "parameters", "return", "mode", "include").map { k -> "$KPREFIX$k"}
-    private val booleans = listOf("TRUE", "FALSE")
-    private val symbols = listOf("->", "<->", ">", "<-", "<")
 
     var src = ""
     private var position = 0
@@ -31,14 +27,19 @@ object Tokenizer {
                 var tokenType = if (value.contains('.')) TokenType.QUALIFIED_IDENTIFIER else TokenType.IDENTIFIER
 
                 // Handle booleans
-                if (value in booleans) tokenType = TokenType.BOOLEAN
+                if (value in Token.booleans) tokenType = TokenType.BOOLEAN
 
                 tokens.add(Token(tokenType, value, position = startPos))
             }
 
             // Handle keywords
-            else if (char == KPREFIX) {
-                tokens.add(Token(TokenType.KEYWORD, getKeyword(), position = startPos))
+            else if (char == Token.KPREFIX) {
+                tokens.add(Token(TokenType.KEYWORD, getFromList(Token.keywords), position = startPos))
+            }
+
+            // Handle keywords
+            else if (char == Token.TPREFIX) {
+                tokens.add(Token(TokenType.TAG, getFromList(Token.tags), position = startPos))
             }
 
             // Handle assignment operators
@@ -206,26 +207,25 @@ object Tokenizer {
         return value
     }
 
-    private fun getKeyword(): String {
-        // Skip first $
+    private fun getFromList(list: List<String>): String {
         val startPos = position
-        var keyword = "${src[position]}"
-        position++
+        var str = ""
 
-        // Get only letters
-        while (!endOfSrc() && src[position].isLetter()) {
-            keyword += src[position]
+        // Get all until whitespace
+        while (!endOfSrc() && !src[position].isWhitespace()) {
+            str += src[position]
             position++
         }
 
-        // Throw error if keyword is invalid
-        if (keyword !in keywords) {
+        // Throw error if token is not in list
+        if (str !in list) {
             val err = InvalidTokenError(src[startPos], getLineCol(startPos).first, getLineCol(startPos).second)
-            err.message += "\nInvalid keyword '$keyword' used"
+            err.message += "\nInvalid keyword '$str' used"
+            err.message += "\nExpected one of the following:\n\t'${list.joinToString("\n\t")}'"
             ErrorHandler.report(err)
         }
 
-        return keyword
+        return str
     }
 
     private fun getComment(): String {
