@@ -1,6 +1,6 @@
 package me.flaming.h0rsescript
 
-import me.flaming.timeStart
+import me.flaming.h0Process
 import okio.FileSystem
 import okio.IOException
 import okio.Path
@@ -35,13 +35,13 @@ class Logger(private val logFilePath: Path? = null) {
 
         if (logFilePath == null || !logInFile) return
         // Store log time and log string in stack
-        val logTime = TimeSource.Monotonic.markNow().minus(timeStart)
+        val logTime = TimeSource.Monotonic.markNow().minus(h0Process.timeStart)
         logStack[logTime] = logString
     }
 
     fun createLogFile() {
         // Marking end of runtime
-        val endTime = TimeSource.Monotonic.markNow().minus(timeStart)
+        val endTime = TimeSource.Monotonic.markNow().minus(h0Process.timeStart)
         logStack[endTime] = "[END]"
 
         // Formatting logs
@@ -58,7 +58,7 @@ class Logger(private val logFilePath: Path? = null) {
             FileSystem.SYSTEM.write(logFilePath) {
                 writeUtf8(logs)
             }
-            println("Log file created at ${FileSystem.SYSTEM.canonicalize(logFilePath)}")
+            println("Log file created at '${FileSystem.SYSTEM.canonicalize(logFilePath)}'")
         } catch (e: IOException) {
             logln("Error writing log file: ${e.message}", Log.ERROR, false)
         }
