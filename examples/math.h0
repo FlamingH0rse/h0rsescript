@@ -1,12 +1,11 @@
-#IMPORT __native_math
+#IMPORT "h0"
 #FILE "LIBRARY"
-#MODE "STATIC"
 
 $define add
 $include __native_math
 $expect num1, num2
     result -> __native_math.add [num1, num2]
-$end
+$end null
 
 $define add
 $include __native_math
@@ -15,7 +14,9 @@ $expect nums
     $define add_current
     $expect num
         result > __native_math.add [result, num]
-    $end
+    $end abc
 
     result > __native_math.add [num1, num2]
-$end
+$end null
+
+add []
