@@ -6,11 +6,11 @@ import me.flaming.h0rsescript.runtime.ErrorHandler
 
 object Tokenizer {
 
-    var src = ""
+    private var src = ""
     private var position = 0
 
-    fun tokenize(input: String, clean: Boolean = false): List<Token> {
-        src = input
+    fun tokenize(rawContent: String, clean: Boolean = false): List<Token> {
+        src = rawContent
         val tokens = mutableListOf<Token>()
 
         val consumeToken = { token: Token ->
@@ -18,8 +18,8 @@ object Tokenizer {
             position += token.value.length
         }
 
-        while (position < input.length) {
-            val char = input[position]
+        while (position < src.length) {
+            val char = src[position]
             val startPos = position
 
             // Handle identifiers, and booleans

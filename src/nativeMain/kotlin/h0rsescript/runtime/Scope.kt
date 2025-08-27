@@ -1,13 +1,9 @@
 package me.flaming.h0rsescript.runtime
 
-class Scope {
-    constructor(
 
-    ) {
-        scopes.add(this)
-    }
+// Variable class
+class Variable(val name: String, var value: H0Type, var isConstant: Boolean = false)
 
-    companion object {
-        val scopes = mutableListOf<Scope>()
-    }
+class Scope(variables: MutableList<Variable>, nativeVariables: MutableList<Method>) {
+
 }

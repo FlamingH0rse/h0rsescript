@@ -28,7 +28,7 @@ class Logger(private val logFilePath: Path? = null) {
     }
 
     fun logln(str: String, logType: Log = Log.NONE, logInFile: Boolean = true) {
-        log("\n" + getPrefix(logType) + str, logType, logInFile)
+        log(str + '\n', logType, logInFile)
     }
 
     fun log(str: String, logType: Log = Log.NONE, logInFile: Boolean = true) {

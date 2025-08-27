@@ -2,8 +2,6 @@ package me.flaming
 
 import me.flaming.h0rsescript.Interpreter
 import me.flaming.h0rsescript.Logger
-import okio.FileSystem
-import okio.IOException
 import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.system.exitProcess
@@ -23,10 +21,12 @@ class H0Process(args: ProgramArgs) {
     val rootPaths = mutableListOf<Path>()
 
     var timeStart = TimeSource.Monotonic.markNow()
-    var interpreterInstance: Interpreter? = null
+    var h0Runtime = Interpreter("", mapOf(), listOf())
+
+    var loadedFiles = mapOf<Path, Interpreter>()
 
     fun start() {
-        handleOptions()
+        handlePreInitOptions()
 
         // Read .h0 file
         if (fileName == "") return logger.log("Please specify the file name to run", Logger.Log.ERROR)
@@ -34,17 +34,17 @@ class H0Process(args: ProgramArgs) {
         val filePath = fileName.toPath()
         val fileExtension = filePath.name.substringAfterLast('.')
         if (fileExtension != LANG_FILE_EXTENSION) logger.logln(
-            "Use recommended file extension '.h0'",
+            "Use recommended file extension '.h0', this is a requirement if you use '#FILE \"LIBRARY\"' on top of your file",
             Logger.Log.WARNING
         )
 
-        fileContent = readFileContent(filePath)
+        fileContent = FS.readFileContent(filePath)
 
         // Run interpreter
         timeStart = TimeSource.Monotonic.markNow()
 
-        interpreterInstance = Interpreter(fileContent, options, h0Args)
-        interpreterInstance!!.run()
+        h0Runtime = Interpreter(fileContent, options, h0Args)
+        h0Runtime.run()
 
         // Exit process after execution
         exit(0)
@@ -58,11 +58,11 @@ class H0Process(args: ProgramArgs) {
         exitProcess(status)
     }
 
-    fun handleOptions() {
-        // Check version
+    fun handlePreInitOptions() {
+        // Check version -version
         if (options.containsKey("version")) return logger.logln("$LANG_NAME current version: $VERSION")
 
-        // Display available options
+        // Display available options -help
         if (options.containsKey("help")) return logger.logln(commandsHelp)
 
         // Set root paths
@@ -84,17 +84,7 @@ class H0Process(args: ProgramArgs) {
         return logFileName.toPath()
     }
 
-    fun readFileContent(filePath: Path): String {
-        try {
-            return FileSystem.SYSTEM.read(filePath) {
-                readUtf8()
-            }
-        } catch (e: IOException) {
-            logger.logln("Error reading file: ${e.message}", Logger.Log.ERROR)
 
-            exit(1)
-        }
-    }
 }
 
 data class ProgramArgs(val options: OptionMap, val fileName: String, val additionalArgs: List<String>) {
