@@ -2,9 +2,10 @@ package me.flaming.h0rsescript.parser
 
 import me.flaming.h0rsescript.Logger
 import me.flaming.h0rsescript.ast.*
-import me.flaming.h0rsescript.core.ErrorHandler
 import me.flaming.h0rsescript.errors.UnexpectedTokenError
+import me.flaming.h0rsescript.runtime.ErrorHandler
 import me.flaming.logger
+
 
 object Parser {
     private val nodes: MutableList<ASTNode> = mutableListOf()
@@ -12,7 +13,9 @@ object Parser {
     private var tokens: List<Token> = listOf()
     private var options: List<String> = listOf()
 
-    private val identifierOrLiteralStartTokens = listOf(TokenType.IDENTIFIER, TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN, TokenType.OPEN_CURLY)
+    private val identifierOrLiteralStartTokens =
+        listOf(TokenType.IDENTIFIER, TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN, TokenType.OPEN_CURLY)
+
     fun parse(tokens: List<Token>, options: List<String>): List<ASTNode> {
         Parser.tokens = tokens
         Parser.options = options
@@ -26,21 +29,22 @@ object Parser {
 
     private fun parseStatement(): ASTNode {
         return when (currentToken()?.type) {
-            TokenType.ASSIGNMENT_OPERATOR -> {
-                // Parse < and <- operations
-                if (currentToken()?.value == "<" || currentToken()?.value == "<-") {
-                    return getAssignmentNode()
+            TokenType.OPERATOR -> {
+                // Parse - operations
+                if (currentToken()?.value == Token.operatorMap[OperationType.DELETE]) {
+                    return getOperationNode()
                 }
                 // Throw UnexpectedTokenError
                 ErrorHandler.report(UnexpectedTokenError(currentToken(), TokenType.IDENTIFIER, TokenType.KEYWORD))
             }
+
             TokenType.IDENTIFIER -> {
                 when (nextToken()?.type) {
                     // Parse function call
                     TokenType.OPEN_BRACKET -> getFunctionCallNode()
 
                     // Parse assignment to a variable
-                    TokenType.ASSIGNMENT_OPERATOR -> getAssignmentNode()
+                    TokenType.OPERATOR -> getOperationNode()
 
                     else -> {
                         // Throw UnexpectedTokenError
@@ -48,12 +52,13 @@ object Parser {
                             UnexpectedTokenError(
                                 nextToken(),
                                 TokenType.OPEN_BRACKET,
-                                TokenType.ASSIGNMENT_OPERATOR
+                                TokenType.OPERATOR
                             )
                         )
                     }
                 }
             }
+
             TokenType.QUALIFIED_IDENTIFIER -> {
                 when (nextToken()?.type) {
                     // Parse function call
@@ -64,47 +69,47 @@ object Parser {
                     }
                 }
             }
+
             TokenType.KEYWORD -> {
                 return when (currentToken()?.value) {
                     "\$define" -> getFunctionDefNode()
                     else -> {
                         // Throw UnexpectedTokenError
-                        val error = UnexpectedTokenError(currentToken(), TokenType.OPEN_BRACKET, TokenType.ASSIGNMENT_OPERATOR, expectedValue = "\$define")
+                        val error = UnexpectedTokenError(
+                            currentToken(),
+                            TokenType.OPEN_BRACKET,
+                            TokenType.OPERATOR,
+                            expectedValue = "\$define"
+                        )
                         error.message += "\nThis keyword must be enclosed within a \$define scope"
                         ErrorHandler.report(error)
                     }
                 }
             }
+
             else -> {
                 ErrorHandler.report(UnexpectedTokenError(currentToken(), TokenType.IDENTIFIER, TokenType.KEYWORD))
             }
         }
     }
+
     private fun getFunctionDefNode(): FunctionDefNode {
+        val startPos = pos
+
         // KEYWORD, IDENTIFIER, BODY, KEYWORD
         consume(TokenType.KEYWORD)
-        val name = consume(TokenType.IDENTIFIER)
-        val options: MutableMap<String, List<String>> = mutableMapOf()
+        val functionName = consume(TokenType.IDENTIFIER)
+        val options = mutableMapOf<String, List<String>>()
 
-        // Parse function options ($include, $mode, $parameters)
-        while (currentToken()?.type == TokenType.KEYWORD && !listOf("\$define", "\$end", "\$return").contains(
-                currentToken()?.value)) {
+        // Parse function options ($expect, $include)
+        while (currentToken()?.type == TokenType.KEYWORD && currentToken()?.value !in listOf("\$define", "\$end")) {
             val key = consume(TokenType.KEYWORD)
-            val values: MutableList<String> = mutableListOf()
+            val values = getTokenInSeries(TokenType.IDENTIFIER, separatedBy = TokenType.COMMA).map { t -> t.value }
 
-
-            var caughtValues = false
-            while(!caughtValues) {
-                val value: String = consume(TokenType.IDENTIFIER).value
-                values.add(value)
-
-                if (currentToken()?.type == TokenType.COMMA) consume(TokenType.COMMA)
-                else caughtValues = true
-            }
-            options[key.value.removePrefix("\$")] = values
+            options[key.value.removePrefix("$")] = values
         }
 
-        val body: MutableList<ASTNode> = mutableListOf()
+        val body = mutableListOf<ASTNode>()
         while (currentToken()?.value != "\$end") {
             val statement: ASTNode
             // Parse FunctionReturnNode
@@ -121,11 +126,13 @@ object Parser {
         if ("log-function-defines" in Parser.options) logger.logln("${name.value} $options\n" + body.map {"  $it"}, Logger.Log.INFO)
         return FunctionDefNode(name.value, options, body)
     }
+
     private fun getFunctionCallNode(): FunctionCallNode {
+        val startPos = pos
         // IDENTIFIER, OPEN_BRACKET, ...IDENTIFIER/STRING/NUMBER/BOOLEAN/ARRAY, CLOSE_BRACKET
 
         // Get function name
-        val name = consume(TokenType.QUALIFIED_IDENTIFIER, TokenType.IDENTIFIER)
+        val functionName = consume(TokenType.QUALIFIED_IDENTIFIER, TokenType.IDENTIFIER)
 
         consume(TokenType.OPEN_BRACKET)
         val arguments: MutableList<ASTNode> = mutableListOf()
@@ -133,82 +140,146 @@ object Parser {
         // Get arguments
         while (currentToken()?.type != TokenType.CLOSE_BRACKET) {
 
-            val arg = consume(*identifierOrLiteralStartTokens.toTypedArray())
-            val argNode = getIdentifierOrLiteralNode(arg)
+            val argNode = getIdentifierOrLiteralNode()
 
             if (currentToken()?.type != TokenType.CLOSE_BRACKET) consume(TokenType.COMMA)
             arguments.add(argNode)
         }
-        if ("log-function-calls" in options) logger.logln("${name.value} $arguments", Logger.Log.INFO)
+
+        if ("log-function-calls" in options) logger.logln("${functionName.value} $arguments", Logger.Log.INFO)
+
         consume(TokenType.CLOSE_BRACKET)
 
-
-        return FunctionCallNode(name.value, arguments.toList())
+        return FunctionCallNode(functionName.value, arguments.toList(), tokensFrom(startPos))
     }
-    private fun getIdentifierOrLiteralNode(arg: Token): ASTNode {
-        return when (arg.type) {
-            TokenType.IDENTIFIER -> IdentifierNode(arg.value)
-            TokenType.STRING -> LiteralNode(arg.value, LiteralNode.LiteralType.STR)
-            TokenType.NUMBER -> LiteralNode(arg.value, LiteralNode.LiteralType.NUM)
-            TokenType.BOOLEAN -> LiteralNode(arg.value, LiteralNode.LiteralType.BOOL)
+
+    private fun getIdentifierOrLiteralNode(): IdentifierOrLiteralNode {
+        val startPos = pos
+        val tokensList = mutableListOf<Token>()
+
+        // Try to consume valid tokens
+        val first = consume(*identifierOrLiteralStartTokens.toTypedArray())
+
+        tokensList.add(first)
+
+        return when (first.type) {
+            TokenType.IDENTIFIER -> IdentifierNode(first)
+            TokenType.STRING -> LiteralNode.Str(first)
+            TokenType.NUMBER -> LiteralNode.Num(first)
+            TokenType.BOOLEAN -> LiteralNode.Bool(first)
             TokenType.OPEN_CURLY -> {
-                val elements = mutableListOf<ASTNode>()
+                // Array members can only be the above mentioned types
+                val arrayMembers = mutableListOf<IdentifierOrLiteralNode>()
                 while (currentToken()?.type != TokenType.CLOSE_CURLY) {
-                    val token = consume(TokenType.IDENTIFIER, TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN, TokenType.OPEN_CURLY)
-                    elements.add(getIdentifierOrLiteralNode(token))
+                    arrayMembers.add(getIdentifierOrLiteralNode())
                     if (currentToken()?.type != TokenType.CLOSE_CURLY) consume(TokenType.COMMA)
                 }
-                // End of ARRAY
                 consume(TokenType.CLOSE_CURLY)
-                return LiteralNode(type = LiteralNode.LiteralType.ARRAY, list = elements)
+
+                LiteralNode.Array(tokensFrom(startPos), arrayMembers)
             }
-            else -> IdentifierNode("IF_YOU_READ_THIS_YOU_MESSED_UP") // Shouldn't happen lol
+
+            else -> throw IllegalStateException("Invalid Token type found while parsing: ${first.type}")
         }
     }
-    private fun getAssignmentNode(): AssignmentNode {
-        val assignmentTypes = mapOf(
-            "->" to AssignmentNode.AssignmentType.VARIABLE,
-            ">" to AssignmentNode.AssignmentType.EDIT,
-            "<->" to AssignmentNode.AssignmentType.CONSTANT,
-            "<" to AssignmentNode.AssignmentType.EMPTY,
-            "<-" to AssignmentNode.AssignmentType.DELETE,
-        )
 
-        var name = Token()
-        // >, -> and <-> assignments
-        if (currentToken()?.type != TokenType.ASSIGNMENT_OPERATOR) {
-            name = consume(TokenType.IDENTIFIER)
+
+    // Must be called when current token is an OPERATOR or IDENTIFIER
+    private fun getOperationNode(): OperationNode {
+        val startPos = pos
+
+        // When current token is OPERATOR, try to get a delete operation node (-var_name)
+        if (currentToken()?.type == TokenType.OPERATOR && currentToken()?.value == Token.operatorMap[OperationType.DELETE]) {
+            consume(TokenType.OPERATOR)
+
+            val deletionNodes = getTokenInSeries(TokenType.IDENTIFIER, separatedBy = TokenType.COMMA)
+                .map { t -> IdentifierNode(t) }
+
+            return DeletionNode(deletionNodes, tokensFrom(startPos))
         }
-        val assignmentOperator = consume(TokenType.ASSIGNMENT_OPERATOR).value
-        val assignmentType = assignmentTypes[assignmentOperator] ?: AssignmentNode.AssignmentType.VARIABLE
 
-        // EMPTY and DELETE operations
-        // SYNTAX: Operator, Identifier, Comma, Identifier, Comma, ...
-        if (assignmentType == AssignmentNode.AssignmentType.EMPTY || assignmentType == AssignmentNode.AssignmentType.DELETE) {
-            val values = mutableListOf<ASTNode>()
-            var caughtValues = false
-            while(!caughtValues) {
-                val token = consume(TokenType.IDENTIFIER)
-                values.add(IdentifierNode(token.value))
-
-                if (currentToken()?.type == TokenType.COMMA) consume(TokenType.COMMA)
-                else caughtValues = true
-            }
-
-            return AssignmentNode(name.value, assignmentType, values = values)
-        }
-        // VARIABLE, CONSTANT and EDIT operations
-        // SYNTAX: Identifier, Operator, Function Call
+        // Handle other operations
         else {
-            val value = getFunctionCallNode()
-            return AssignmentNode(name.value, assignmentType, value)
+            val name = consume(TokenType.IDENTIFIER)
+            val operator = consume(TokenType.OPERATOR)
+
+            val operationType = Token.getOperatorType(operator.value) as OperationType
+
+            // Handle variable creation and modification node
+            when (operationType) {
+                in CreationNode.validTypes -> {
+                    val value: ASTNode
+
+
+                    // Pipe node
+                    if (
+                        nextToken()?.type == TokenType.OPERATOR &&
+                        Token.getOperatorType(nextToken()?.value ?: "") in PipeNode.validTypes
+                    ) {
+
+                        value = getOperationNode()
+                    }
+
+                    // Function call node
+                    // This will error if the next token is not a OPEN_BRACKET
+                    else {
+                        value = getFunctionCallNode()
+                    }
+                    return CreationNode(name.value, value, operationType, tokensFrom(startPos))
+
+                }
+
+                // Handle pipes
+                in PipeNode.validTypes -> {
+                    val insertPipeSymbol = Token.operatorMap[OperationType.INSERT_PIPE]
+                    val extractPipeSymbol = Token.operatorMap[OperationType.EXTRACT_PIPE]
+
+                    // Consume all pipe contents
+                    // Valid pipe contents can be identifiers or function calls
+                    val pipeContent = mutableListOf<ASTNode>()
+
+                    var pipeExtracted = false
+
+                    while (!pipeExtracted) {
+                        if (nextToken()?.type == TokenType.OPEN_BRACKET) pipeContent.add(getFunctionCallNode())
+                        else {
+                            val identifierToken = consume(TokenType.IDENTIFIER)
+                            val identifierNode = IdentifierNode(identifierToken)
+
+                            pipeContent.add(identifierNode)
+                        }
+
+                        if (nextToken()?.value == extractPipeSymbol) pipeExtracted = true
+                        else consume(TokenType.OPERATOR, valueToMatch = insertPipeSymbol)
+                    }
+
+                    val pipeNode = PipeNode(pipeContent, tokensFrom(startPos))
+
+                    // Consume pipe extraction
+                    consume(TokenType.OPERATOR, valueToMatch = extractPipeSymbol)
+
+                    val nameToken = consume(TokenType.IDENTIFIER, TokenType.QUALIFIED_IDENTIFIER)
+                    val extractedBy = IdentifierNode(nameToken)
+
+                    return PipeExtractionNode(pipeNode, extractedBy, tokensFrom(startPos))
+                }
+
+                // Handle unexpected delete operator use
+                else -> {
+                    ErrorHandler.report(UnexpectedTokenError(operator, expectedValue = "Non-DELETION operator"))
+                }
+            }
         }
     }
 
 
     private fun consume(vararg types: TokenType, valueToMatch: String? = null): Token {
-        if ("log-tokens" in options) logger.logln(currentToken()?.type.toString(), Logger.Log.INFO)
+        if ("log-tokens" in options) logger.log(
+            "${currentToken()?.type.toString()} '${currentToken()?.value}' ",
+            Logger.Log.INFO
+        )
         val current = currentToken()
+
         if (current != null && current.type in types) {
             if (valueToMatch != null && current.value != valueToMatch) {
                 // Throw UnexpectedTokenError
@@ -222,6 +293,28 @@ object Parser {
         ErrorHandler.report(UnexpectedTokenError(current, *types))
     }
 
+    private fun getTokenInSeries(
+        vararg types: TokenType,
+        separatedBy: TokenType,
+        separatedByValue: String? = null
+    ): List<Token> {
+        val values = mutableListOf<Token>()
+        var caughtValues = false
+        while (!caughtValues) {
+            val token = consume(*types)
+            values.add(token)
+
+            // Check whether correct type & consume, while checking the value to match
+            if (currentToken()?.type == separatedBy) consume(separatedBy, valueToMatch = separatedByValue)
+            else caughtValues = true
+        }
+        return values
+    }
+
+    private fun tokensFrom(start: Int): List<Token> {
+        return tokens.subList(start, pos)
+    }
+
     private fun currentToken(): Token? = tokens.getOrNull(pos)
-    private fun nextToken(): Token? = tokens.getOrNull(pos +1)
+    private fun nextToken(): Token? = tokens.getOrNull(pos + 1)
 }

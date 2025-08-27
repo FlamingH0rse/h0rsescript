@@ -1,14 +1,14 @@
 package me.flaming.h0rsescript.parser
 
-import me.flaming.h0rsescript.core.ErrorHandler
 import me.flaming.h0rsescript.errors.InvalidTokenError
+import me.flaming.h0rsescript.runtime.ErrorHandler
 
 object Tokenizer {
 
     var src = ""
     private var position = 0
 
-    fun tokenize(input: String): MutableList<Token> {
+    fun tokenize(input: String, clean: Boolean = false): List<Token> {
         src = input
         val tokens = mutableListOf<Token>()
 
@@ -33,18 +33,18 @@ object Tokenizer {
             }
 
             // Handle keywords
-            else if (char == Token.KPREFIX) {
+            else if (char == Token.KEYWORDPREFIX) {
                 tokens.add(Token(TokenType.KEYWORD, getFromList(Token.keywords), position = startPos))
             }
 
             // Handle keywords
-            else if (char == Token.TPREFIX) {
+            else if (char == Token.TAGPREFIX) {
                 tokens.add(Token(TokenType.TAG, getFromList(Token.tags), position = startPos))
             }
 
             // Handle assignment operators
             else if (isAssignmentOpChar()) {
-                tokens.add(Token(TokenType.ASSIGNMENT_OPERATOR, getAssignmentOp(), position = startPos))
+                tokens.add(Token(TokenType.OPERATOR, getAssignmentOp(), position = startPos))
             }
 
             // Handle strings and numbers
@@ -71,7 +71,7 @@ object Tokenizer {
             }
 
             // Comments
-            else if (char == '#') {
+            else if (char == ';') {
                 tokens.add(Token(TokenType.COMMENT, getComment(), position = startPos))
             }
 
@@ -79,6 +79,9 @@ object Tokenizer {
             else {
                 ErrorHandler.report(InvalidTokenError(src[position], getLineCol(position).first, getLineCol(position).second))
             }
+        }
+        if (clean) {
+            tokens.removeAll { t -> t.type == TokenType.COMMENT }
         }
         return tokens
     }
@@ -90,27 +93,31 @@ object Tokenizer {
                 subStr.startsWith("->") ||
                 subStr.startsWith("<-") ||
                 subStr.startsWith(">") ||
-                subStr.startsWith("<")
+                subStr.startsWith("<") ||
+                subStr.startsWith("-")
     }
     private fun getAssignmentOp(): String {
         val subStr = src.substring(position)
-        var operatorValue = ""
+        var operatorValue: String
 
         // Goofy ahh code v2
         if (subStr.startsWith("<->")) {
             operatorValue = "<->"
             position += 3
         } else if (subStr.startsWith("->")) {
-            operatorValue += "->"
+            operatorValue = "->"
             position += 2
         } else if (subStr.startsWith("<-")) {
-            operatorValue += "<-"
+            operatorValue = "<-"
             position += 2
         } else if (subStr.startsWith(">")) {
-            operatorValue += ">"
+            operatorValue = ">"
             position += 1
         } else if (subStr.startsWith("<")) {
-            operatorValue += "<"
+            operatorValue = "<"
+            position += 1
+        } else if (subStr.startsWith("-")) {
+            operatorValue = "-"
             position += 1
         } else {
             ErrorHandler.report(InvalidTokenError(src[position], getLineCol(position).first, getLineCol(position).second))

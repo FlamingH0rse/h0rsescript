@@ -1,33 +1,72 @@
 package me.flaming.h0rsescript.parser
 
+import me.flaming.h0rsescript.ast.OperationType
+
 data class Token(
     val type: TokenType = TokenType.COMMENT,
     val value: String = "",
     val position: Int = 0
 ) {
     companion object {
-        const val TPREFIX = '#'
-        val tags = listOf("IMPORT", "EXPORT", "TYPING", "LIBRARY").map { t -> "$TPREFIX$t"}
-        const val KPREFIX = '$'
-        val keywords = listOf("define", "end", "parameters", "return", "mode", "include").map { k -> "$KPREFIX$k"}
+        const val TAGPREFIX = '#'
+        val tags = listOf("IMPORT", "FILE", "MODE", "EXPORT").map { t -> "$TAGPREFIX$t" }
+        const val KEYWORDPREFIX = '$'
+        val keywords = listOf("define", "expect", "include", "end").map { k -> "$KEYWORDPREFIX$k" }
         val booleans = listOf("TRUE", "FALSE")
-        private val symbols = listOf("->", "<->", ">", "<-", "<")
-
-        fun validListOf(type: TokenType): List<String>? {
-
-            return when (type) {
-                TokenType.KEYWORD -> keywords
-                TokenType.TAG -> tags
-                TokenType.ASSIGNMENT_OPERATOR -> symbols
-                TokenType.BOOLEAN -> booleans
-                TokenType.OPEN_BRACKET -> listOf("[")
-                TokenType.CLOSE_BRACKET -> listOf("]")
-                TokenType.OPEN_CURLY -> listOf("{")
-                TokenType.CLOSE_CURLY -> listOf("}")
-                TokenType.COMMA -> listOf(",")
-                else -> null
-            }
+        val operatorMap = mapOf(
+            OperationType.MUTABLE_CREATE to "->",
+            OperationType.IMMUTABLE_CREATE to "<->",
+            OperationType.MODIFY_MUTABLE to ">",
+            OperationType.INSERT_PIPE to "<",
+            OperationType.EXTRACT_PIPE to "<-",
+            OperationType.DELETE to "-",
+        )
+        val operators = operatorMap.values.toList()
+        fun getOperatorType(symbol: String): OperationType? {
+            return operatorMap.keys.find { k -> operatorMap[k] == symbol }
         }
+
+//        fun validListOf(type: TokenType): List<String>? {
+//
+//            return when (type) {
+//                TokenType.KEYWORD -> keywords
+//                TokenType.TAG -> tags
+//                TokenType.ASSIGNMENT_OPERATOR -> operators
+//                TokenType.BOOLEAN -> booleans
+//                TokenType.OPEN_BRACKET -> listOf("[")
+//                TokenType.CLOSE_BRACKET -> listOf("]")
+//                TokenType.OPEN_CURLY -> listOf("{")
+//                TokenType.CLOSE_CURLY -> listOf("}")
+//                TokenType.COMMA -> listOf(",")
+//                else -> null
+//            }
+//        }
+//
+//        fun validChars(type: TokenType): String? {
+//            return when (type) {
+//                TokenType.IDENTIFIER -> "abcdefghijklmnopqrstuvwxyz123456789_"
+//                TokenType.QUALIFIED_IDENTIFIER -> "abcdefghijklmnopqrstuvwxyz1234567890_."
+//                else -> null
+//            }
+//        }
+//        fun validPrefixes(type: TokenType): String? {
+//            return when (type) {
+//                TokenType.IDENTIFIER -> "abcdefghijklmnopqrstuvwxyz123456789_"
+//                TokenType.QUALIFIED_IDENTIFIER -> "abcdefghijklmnopqrstuvwxyz1234567890_."
+//                TokenType.KEYWORD -> KEYWORDPREFIX.toString()
+//                TokenType.TAG -> TAGPREFIX.toString()
+//                TokenType.ASSIGNMENT_OPERATOR -> "<->"
+//                TokenType.STRING -> "\""
+//                TokenType.NUMBER -> "1234567890"
+//                TokenType.BOOLEAN -> TODO()
+//                TokenType.OPEN_BRACKET -> TODO()
+//                TokenType.CLOSE_BRACKET -> TODO()
+//                TokenType.OPEN_CURLY -> TODO()
+//                TokenType.CLOSE_CURLY -> TODO()
+//                TokenType.COMMA -> TODO()
+//                TokenType.COMMENT -> TODO()
+//            }
+//        }
     }
 }
 
@@ -36,7 +75,7 @@ enum class TokenType {
     QUALIFIED_IDENTIFIER, // Function signatures like math.add
     KEYWORD,       // Keywords like $define, $end, etc.
     TAG,           // Tags like #IMPORT, #EXPORT, #LIBRARY
-    ASSIGNMENT_OPERATOR,        // Symbols like ->, <->, etc.
+    OPERATOR,        // Symbols like ->, <->, etc.
 
     STRING,        // String literals
     NUMBER,        // Numeric literals
