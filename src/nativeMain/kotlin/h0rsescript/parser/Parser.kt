@@ -111,20 +111,27 @@ object Parser {
 
         val body = mutableListOf<ASTNode>()
         while (currentToken()?.value != "\$end") {
-            val statement: ASTNode
-            // Parse FunctionReturnNode
-            if (currentToken()?.value == "\$return") {
-                consume(TokenType.KEYWORD, valueToMatch = "\$return")
-                val returnValue = consume(*identifierOrLiteralStartTokens.toTypedArray())
-                statement = FunctionReturnNode(getIdentifierOrLiteralNode(returnValue))
-            }
-            else statement = parseStatement()
+            val statement = parseStatement()
             body.add(statement)
-        }
-        consume(TokenType.KEYWORD, valueToMatch = "\$end")
 
-        if ("log-function-defines" in Parser.options) logger.logln("${name.value} $options\n" + body.map {"  $it"}, Logger.Log.INFO)
-        return FunctionDefNode(name.value, options, body)
+            // Parse FunctionReturnNode
+//            if (currentToken()?.value == "\$return") {
+//                consume(TokenType.KEYWORD, valueToMatch = "\$return")
+//                val returnValue = consume(*identifierOrLiteralStartTokens.toTypedArray())
+//                statement = FunctionReturnNode(getIdentifierOrLiteralNode(returnValue))
+//            } else statement = parseStatement()
+        }
+        val endKeyword =
+            consume(TokenType.KEYWORD, valueToMatch = "\$end").value.removePrefix(Token.KEYWORDPREFIX.toString())
+        val result = consume(TokenType.IDENTIFIER)
+
+        options[endKeyword] = listOf(result.value)
+
+        if ("log-function-defines" in Parser.options) logger.logln(
+            "${functionName.value} $options\n" + body.map { "  $it" },
+            Logger.Log.INFO
+        )
+        return FunctionDefNode(functionName.value, options, body, tokensFrom(startPos))
     }
 
     private fun getFunctionCallNode(): FunctionCallNode {
