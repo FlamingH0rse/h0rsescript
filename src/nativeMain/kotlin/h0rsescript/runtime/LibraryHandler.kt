@@ -4,33 +4,9 @@ import me.flaming.LANG_NAME_SHORT
 import me.flaming.h0rsescript.errors.ReferenceError
 import me.flaming.h0rsescript.runtime.libraries.*
 
-class MethodHandler(namespaces: List<String>) {
-    companion object {
-        val handlers: MutableList<MethodHandler> = mutableListOf()
+class LibraryHandler(namespaces: List<String>) {
 
-        // Gets from the last available handler
-        fun exists(name: String): Boolean {
-            return getLastHandler(name) != null
-        }
-        fun getLastHandler(name: String): MethodHandler? {
-            val methodSignature = name.split('.').toMutableList()
-
-            val methodName = methodSignature.removeLast()
-            val namespaceName = methodSignature.joinToString(".")
-
-            // Checks starting from innermost handler, then upwards to global handler
-            for (handler in handlers.reversed()) {
-                if (namespaceName in handler.loadedNamespaces) {
-                    val namespace = handler.loadedNamespaces[namespaceName]
-                    if (namespace!!.hasMethod(methodName)) return handler
-                }
-            }
-            return null
-        }
-    }
-
-//    val dataMethod = Method(H0Type.STR::class, runnable = {args -> args[0]})
-    val loadedNamespaces = mutableMapOf<String, Namespace>()
+    val loadedNativeLibs = mutableMapOf<String, NativeLibrary>()
     init {
         val namespaceMap = mapOf(
             "" to RootNamespace,
@@ -46,7 +22,7 @@ class MethodHandler(namespaces: List<String>) {
             val namespaceName = if (n == LANG_NAME_SHORT) "" else n
 
             val namespace = namespaceMap[namespaceName] ?: ErrorHandler.report(ReferenceError(n))
-            loadedNamespaces[namespaceName] = namespace
+            loadedNativeLibs[namespaceName] = namespace
         }
         handlers.add(this)
     }
@@ -58,10 +34,10 @@ class MethodHandler(namespaces: List<String>) {
         val namespaceName = methodSignature.joinToString(".")
 
         // Check if namespace exists/is loaded
-        if (namespaceName !in loadedNamespaces) {
+        if (namespaceName !in loadedNativeLibs) {
             ErrorHandler.report(ReferenceError(namespaceName))
         }
-        val namespace = loadedNamespaces[namespaceName]
+        val namespace = loadedNativeLibs[namespaceName]
 
         // Check if method exists in the namespace
         if (!namespace!!.hasMethod(methodName)) {
@@ -70,5 +46,30 @@ class MethodHandler(namespaces: List<String>) {
 
         // Execute the method
         return namespace.executeMethod(methodName, arguments)
+    }
+
+    companion object {
+        val handlers: MutableList<LibraryHandler> = mutableListOf()
+
+        // Gets from the last available handler
+        fun exists(name: String): Boolean {
+            return getLastHandler(name) != null
+        }
+
+        fun getLastHandler(name: String): LibraryHandler? {
+            val methodSignature = name.split('.').toMutableList()
+
+            val methodName = methodSignature.removeLast()
+            val namespaceName = methodSignature.joinToString(".")
+
+            // Checks starting from innermost handler, then upwards to global handler
+            for (handler in handlers.reversed()) {
+                if (namespaceName in handler.loadedNativeLibs) {
+                    val namespace = handler.loadedNativeLibs[namespaceName]
+                    if (namespace!!.hasMethod(methodName)) return handler
+                }
+            }
+            return null
+        }
     }
 }

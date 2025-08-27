@@ -4,9 +4,9 @@ import me.flaming.h0rsescript.errors.ParsingError
 import me.flaming.h0rsescript.runtime.ErrorHandler
 import me.flaming.h0rsescript.runtime.H0Type
 import me.flaming.h0rsescript.runtime.Method
-import me.flaming.h0rsescript.runtime.Namespace
+import me.flaming.h0rsescript.runtime.NativeLibrary
 
-object NumberNamespace : Namespace() {
+object NumberNamespace : NativeLibrary() {
     override val methods: Map<String, Method> = mapOf(
         "to_num" to Method(H0Type.STR::class) { args ->
             val str = (args[0] as H0Type.STR).value

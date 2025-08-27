@@ -4,12 +4,12 @@ import me.flaming.h0rsescript.errors.ArithmeticError
 import me.flaming.h0rsescript.runtime.ErrorHandler
 import me.flaming.h0rsescript.runtime.H0Type
 import me.flaming.h0rsescript.runtime.Method
-import me.flaming.h0rsescript.runtime.Namespace
+import me.flaming.h0rsescript.runtime.NativeLibrary
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-object MathNamespace : Namespace() {
+object MathNamespace : NativeLibrary() {
     override val methods: Map<String, Method> = mapOf(
         "add" to Method(H0Type.NUM::class, H0Type.NUM::class) { args ->
             val a = (args[0] as H0Type.NUM).value

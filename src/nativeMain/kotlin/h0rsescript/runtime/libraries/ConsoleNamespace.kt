@@ -2,10 +2,10 @@ package me.flaming.h0rsescript.runtime.libraries
 
 import me.flaming.h0rsescript.runtime.H0Type
 import me.flaming.h0rsescript.runtime.Method
-import me.flaming.h0rsescript.runtime.Namespace
+import me.flaming.h0rsescript.runtime.NativeLibrary
 import me.flaming.logger
 
-object ConsoleNamespace : Namespace() {
+object ConsoleNamespace : NativeLibrary() {
     override val methods: Map<String, Method> = mapOf(
         "write" to Method(H0Type::class) { args ->
             logger.log(args[0].toString())

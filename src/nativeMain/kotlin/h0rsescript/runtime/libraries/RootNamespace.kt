@@ -3,9 +3,9 @@ package me.flaming.h0rsescript.runtime.libraries
 import me.flaming.h0Process
 import me.flaming.h0rsescript.runtime.H0Type
 import me.flaming.h0rsescript.runtime.Method
-import me.flaming.h0rsescript.runtime.Namespace
+import me.flaming.h0rsescript.runtime.NativeLibrary
 
-object RootNamespace : Namespace() {
+object RootNamespace : NativeLibrary() {
     override val methods: Map<String, Method> = mapOf(
         "data" to Method (H0Type::class, runnable = { args -> args[0] }),
         "type" to Method (H0Type::class, runnable = { args -> args[0]::class.simpleName}),

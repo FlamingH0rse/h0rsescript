@@ -2,7 +2,7 @@ package me.flaming.h0rsescript.runtime
 
 import me.flaming.h0rsescript.errors.TypeError
 
-abstract class Namespace {
+abstract class NativeLibrary {
     abstract val methods: Map<String, Method>
 
     fun hasMethod(name: String): Boolean = name in methods

@@ -2,9 +2,9 @@ package me.flaming.h0rsescript.runtime.libraries
 
 import me.flaming.h0rsescript.runtime.H0Type
 import me.flaming.h0rsescript.runtime.Method
-import me.flaming.h0rsescript.runtime.Namespace
+import me.flaming.h0rsescript.runtime.NativeLibrary
 
-object ConditionalNamespace : Namespace() {
+object ConditionalNamespace : NativeLibrary() {
     override val methods: Map<String, Method> = mapOf(
         "and" to Method(H0Type.BOOL::class, H0Type.BOOL::class) { args ->
             val bool1 = (args[0] as H0Type.BOOL).value
