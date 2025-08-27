@@ -1,5 +1,6 @@
 package me.flaming.h0rsescript.parser
 
+import me.flaming.FS
 import me.flaming.h0rsescript.errors.InvalidTokenError
 import me.flaming.h0rsescript.runtime.ErrorHandler
 
@@ -248,13 +249,5 @@ object Tokenizer {
 
     private fun endOfSrc() = position >= src.length
 
-    fun getLineCol(pos: Int): Pair<Int, Int> {
-        val subStr = src.substring(0, pos)
-        val lines = subStr.split('\n')
-
-        val line = lines.size
-        val column = lines.last().length + 1
-
-        return Pair(line, column)
-    }
+    fun getLineCol(pos: Int): Pair<Int, Int> = FS.lineColumnFromPos(src, pos)
 }
