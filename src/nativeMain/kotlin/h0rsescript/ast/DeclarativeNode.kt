@@ -4,6 +4,9 @@ import me.flaming.h0rsescript.parser.Token
 
 data class DeclarativeNode(
     val key: String,
-    val values: List<String>,
+    val rawValue: LiteralNode.Str,
     override val tokens: List<Token>
-) : ASTNode
+) : ASTNode {
+
+    val values = rawValue.value.split(";")
+}

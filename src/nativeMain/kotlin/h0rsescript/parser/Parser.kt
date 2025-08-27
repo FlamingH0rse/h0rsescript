@@ -6,9 +6,11 @@ import me.flaming.h0rsescript.errors.UnexpectedTokenError
 import me.flaming.h0rsescript.runtime.ErrorHandler
 import me.flaming.logger
 
+typealias ParsedCode = List<ASTNode>
 
 object Parser {
     private val nodes: MutableList<ASTNode> = mutableListOf()
+
     private var pos = 0
     private var tokens: List<Token> = listOf()
     private var options: List<String> = listOf()
@@ -16,7 +18,7 @@ object Parser {
     private val identifierOrLiteralStartTokens =
         listOf(TokenType.IDENTIFIER, TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN, TokenType.OPEN_CURLY)
 
-    fun parse(tokens: List<Token>, options: List<String>): List<ASTNode> {
+    fun parse(tokens: List<Token>, options: List<String>): ParsedCode {
         Parser.tokens = tokens
         Parser.options = options
 
@@ -87,10 +89,28 @@ object Parser {
                 }
             }
 
+            TokenType.TAG -> {
+                if (nodes.isNotEmpty() && nodes.last() !is DeclarativeNode) {
+                    val error = UnexpectedTokenError(currentToken(), TokenType.IDENTIFIER, TokenType.KEYWORD)
+                    error.message += "\nFile declaratives must be declared at the top of the file"
+                    ErrorHandler.report(error)
+                }
+
+                getDeclarativeNode()
+
+            }
+
             else -> {
                 ErrorHandler.report(UnexpectedTokenError(currentToken(), TokenType.IDENTIFIER, TokenType.KEYWORD))
             }
         }
+    }
+
+    private fun getDeclarativeNode(): DeclarativeNode {
+        val name = consume(TokenType.TAG)
+        val value = consume(TokenType.STRING)
+
+        return DeclarativeNode(name.value, LiteralNode.Str(value), listOf(name, value))
     }
 
     private fun getFunctionDefNode(): FunctionDefNode {
@@ -281,7 +301,7 @@ object Parser {
 
 
     private fun consume(vararg types: TokenType, valueToMatch: String? = null): Token {
-        if ("log-tokens" in options) logger.log(
+        if ("log-tokens" in options) logger.logln(
             "${currentToken()?.type.toString()} '${currentToken()?.value}' ",
             Logger.Log.INFO
         )
