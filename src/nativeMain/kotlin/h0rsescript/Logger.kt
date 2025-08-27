@@ -8,7 +8,7 @@ import kotlin.time.Duration
 import kotlin.time.TimeSource
 
 class Logger(private val logFilePath: Path? = null) {
-    private val logStack = mutableMapOf<Duration, String>(
+    private val logStack = mutableMapOf(
         Duration.ZERO to "[START]"
     )
     enum class Log {
@@ -18,18 +18,22 @@ class Logger(private val logFilePath: Path? = null) {
         ERROR
     }
 
-    fun logln(str: String, logType: Log = Log.NONE, logInFile: Boolean = true) {
-        log(str + "\n", logType, logInFile)
-    }
-
-    fun log(str: String, logType: Log = Log.NONE, logInFile: Boolean = true) {
-        var logString = when (logType) {
+    fun getPrefix(logType: Log = Log.NONE): String {
+        return when (logType) {
             Log.INFO -> "[INFO] "
             Log.WARNING -> "[WARNING] "
             Log.ERROR -> "[ERROR] "
             Log.NONE -> ""
         }
-        logString += str
+    }
+
+    fun logln(str: String, logType: Log = Log.NONE, logInFile: Boolean = true) {
+        log("\n" + getPrefix(logType) + str, logType, logInFile)
+    }
+
+    fun log(str: String, logType: Log = Log.NONE, logInFile: Boolean = true) {
+
+        val logString = getPrefix(logType) + str
 
         print(logString)
 

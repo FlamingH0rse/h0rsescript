@@ -2,15 +2,7 @@ package me.flaming
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.toKString
-import me.flaming.h0rsescript.Interpreter
-import me.flaming.h0rsescript.Logger
-import okio.FileSystem
-import okio.IOException
-import okio.Path
-import okio.Path.Companion.toPath
 import platform.posix.getenv
-import kotlin.system.exitProcess
-import kotlin.time.TimeSource
 
 const val LANG_NAME = "h0rsescript"
 const val LANG_NAME_SHORT = "h0"

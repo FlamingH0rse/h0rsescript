@@ -8,7 +8,9 @@ class UnexpectedTokenError(token: Token?, vararg expectedTypes: TokenType, expec
     init {
         super.type = ErrorType.SYNTAX
         super.name = "UnexpectedTokenError"
-        super.message = "Unexpected token '${token?.value}' of type ${token?.type}, expected a ${expectedValue ?: expectedTypes.toList().joinToString(" or ")}"
+        super.message = "Unexpected token '${token?.value}' of type ${token?.type}, expected ${
+            expectedValue ?: expectedTypes.toList().joinToString(" or ")
+        }"
         super.line = Tokenizer.getLineCol(token?.position ?: 0).first
         super.column = Tokenizer.getLineCol(token?.position ?: 0).second
     }

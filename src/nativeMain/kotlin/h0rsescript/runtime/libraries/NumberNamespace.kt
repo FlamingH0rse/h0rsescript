@@ -1,7 +1,7 @@
 package me.flaming.h0rsescript.runtime.libraries
 
-import me.flaming.h0rsescript.core.ErrorHandler
 import me.flaming.h0rsescript.errors.ParsingError
+import me.flaming.h0rsescript.runtime.ErrorHandler
 import me.flaming.h0rsescript.runtime.H0Type
 import me.flaming.h0rsescript.runtime.Method
 import me.flaming.h0rsescript.runtime.Namespace
