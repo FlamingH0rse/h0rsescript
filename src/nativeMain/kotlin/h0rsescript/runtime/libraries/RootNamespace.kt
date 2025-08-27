@@ -16,7 +16,7 @@ object RootNamespace : Namespace() {
         "run" to Method (H0Type.FUN::class, H0Type.ARRAY::class) { args ->
             val function = args[0] as H0Type.FUN
             val arguments = (args[1] as H0Type.ARRAY).elements
-            h0Process.interpreterInstance!!.executeH0Function(function, arguments)
+//            h0Process.interpreterInstance!!.executeH0Function(function, arguments)
         }
 //        "namespaces" to Method (runnable = {args -> MethodHandler.handlers.last().loadedNamespaces.keys })
     )
