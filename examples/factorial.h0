@@ -1,12 +1,12 @@
 $define main
 $include console
-$parameters args
+$expect args
     fact -> factorial [7]
     console.write_line [fact]
-$end
+$end 0
 
 $define factorial
-$parameters n
+$expect n
 $include h0, math, conditionals
 
     result -> data [n]
@@ -16,7 +16,7 @@ $include h0, math, conditionals
     is_zero_or_one -> conditionals.or [is_zero, is_one]
 
     $define recursive_factorial
-    $parameters n
+    $expect n
 
         n > math.subtract [n, 1]
 
@@ -31,11 +31,11 @@ $include h0, math, conditionals
                 is_more_than_zero,
                 multiply_result_with_prev_num, {}
             ]
-    $end
+    $end 0
 
     $define set_return_to_one
         result > data [1]
-    $end
+    $end 0
 
     conditionals.run_if_else[
         is_zero_or_one,
@@ -45,5 +45,4 @@ $include h0, math, conditionals
         {n}
     ]
 
-    $return result
-$end
+$end result

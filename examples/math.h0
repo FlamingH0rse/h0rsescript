@@ -1,1 +1,21 @@
-#IMPORT #TYPING
+#IMPORT __native_math
+#FILE "LIBRARY"
+#MODE "STATIC"
+
+$define add
+$include __native_math
+$expect num1, num2
+    result -> __native_math.add [num1, num2]
+$end
+
+$define add
+$include __native_math
+$expect nums
+    result -> data [0]
+    $define add_current
+    $expect num
+        result > __native_math.add [result, num]
+    $end
+
+    result > __native_math.add [num1, num2]
+$end
