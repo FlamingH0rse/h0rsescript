@@ -95,14 +95,14 @@ The `data` method provided by the root `h0` library, is used for initializing va
 #### Assignment Operators
 H0rsescript has 5 assignment operators for managing variables:<br>
 
-| Symbol | Operation                             | Example usage               |
-|:------:|:-------------------------------------:|:---------------------------:|
-|   ->   | Declare variable                      | `my_var -> data [value]`    |
-|   <->  | Declare constant                      | `my_const <-> data [value]` |
-|   >    | Modify variable value                 | `my_var > data [new_value]` |
-|   <-   | Delete variable                       | `<- my_var`                 |
-|   <    | Set variable to `NULL` (empties value)| `< my_var`                  |
-
+| Symbol |        Operation         |          Example usage           |
+|:------:|:------------------------:|:--------------------------------:|
+|   ->   |   Declare mutable data   |  `my_name -> data ["flaming"]`   |
+|  <->   |  Declare immutable data  |     `pi <-> data [3.14159]`      |
+|   >    |       Modify data        | `my_name > data ["flaming two"]` |
+|   <    |      Pipe function       |      `data [2] < data [4]`       |
+|   <-   | Extract pipe and execute |          `<- math.add`           |
+|   -    |    Undeclare any data    |            `- my_var`            |
 <details>
   <summary>Example</summary>
   
@@ -120,13 +120,11 @@ $include h0, console
     # Edit the my_string variable's value
     my_string > data ["Goodbye World"]
     
+    # Pipe and extract pipe example
+    double_of_my_number -> data [my_number] < data [my_number] <- math.add
+    
     # Delete my_string variable
-    <- my_string
-    
-    # Empty my_number and my_boolean, i.e, set their values as null
-    < my_number, my_boolean
-    
-    console.write_line [my_boolean] # Prints null
+    - my_string
     
     console.write_line [my_string]  # Throws ReferenceError
 
