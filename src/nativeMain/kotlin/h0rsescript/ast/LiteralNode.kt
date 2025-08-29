@@ -2,16 +2,12 @@ package me.flaming.h0rsescript.ast
 
 import me.flaming.h0rsescript.parser.Token
 
-
 sealed class LiteralNode(
-    override val tokens: List<Token>
 ) : ASTNode, IdentifierOrLiteralNode {
     abstract val value: Any
 
-    data class Str(
-        val token: Token
+    data class Str(val token: Token) : LiteralNode() {
 
-    ) : LiteralNode(listOf(token)) {
         override val value = unescape(token.value).trim('"')
 
         companion object {
@@ -24,7 +20,7 @@ sealed class LiteralNode(
                 "\\\"" to "\""
             )
 
-            private fun unescape(str: kotlin.String): kotlin.String {
+            private fun unescape(str: String): String {
                 var unescapedStr = str
                 for ((k, v) in escapeSequences) {
                     unescapedStr = unescapedStr.replace(k, v)
@@ -34,30 +30,19 @@ sealed class LiteralNode(
         }
     }
 
-    data class Num(
-        val token: Token
-
-    ) : LiteralNode(listOf(token)) {
+    data class Num(val token: Token) : LiteralNode() {
 
         override val value = token.value.toDouble()
 
     }
 
-    data class Bool(
-        val token: Token
-
-    ) : LiteralNode(listOf(token)) {
+    data class Bool(val token: Token) : LiteralNode() {
 
         override val value = token.value.lowercase().toBooleanStrict()
 
     }
 
-    data class Array(
-
-        override val tokens: List<Token>,
-        val list: List<IdentifierOrLiteralNode>
-
-    ) : LiteralNode(tokens) {
+    data class Array(val list: List<IdentifierOrLiteralNode>) : LiteralNode() {
 
         override val value = list
 

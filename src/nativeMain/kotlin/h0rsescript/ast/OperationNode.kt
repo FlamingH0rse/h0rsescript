@@ -1,7 +1,5 @@
 package me.flaming.h0rsescript.ast
 
-import me.flaming.h0rsescript.parser.Token
-
 enum class OperationType {
     MUTABLE_CREATE,
     IMMUTABLE_CREATE,
@@ -11,7 +9,7 @@ enum class OperationType {
     DELETE
 }
 
-abstract class OperationNode(
+sealed class OperationNode(
     open val operationType: OperationType,
 ) : ASTNode {
     companion object {
@@ -21,10 +19,9 @@ abstract class OperationNode(
 }
 
 data class CreationNode(
-    val name: String,
+    val name: IdentifierNode,
     val value: ASTNode,
     override val operationType: OperationType,
-    override val tokens: List<Token>
 
 ) : OperationNode(operationType) {
     companion object {
@@ -40,7 +37,6 @@ data class CreationNode(
 
 data class DeletionNode(
     val values: List<IdentifierNode>,
-    override val tokens: List<Token>
 
 ) : OperationNode(OperationType.DELETE) {
     companion object {
@@ -50,7 +46,6 @@ data class DeletionNode(
 
 data class PipeNode(
     val content: List<ASTNode>,
-    override val tokens: List<Token>,
 
     ) : OperationNode(OperationType.INSERT_PIPE) {
 
@@ -60,9 +55,8 @@ data class PipeNode(
 }
 
 data class PipeExtractionNode(
-    val pipeContent: PipeNode,
+    val pipe: PipeNode,
     val extractedBy: IdentifierNode,
-    override val tokens: List<Token>,
 
     ) : OperationNode(OperationType.EXTRACT_PIPE) {
 
