@@ -1,9 +1,11 @@
 package me.flaming.h0rsescript.errors
 
-class IllegalAssignmentError(variableName: String): H0Error() {
+import me.flaming.h0rsescript.ast.IdentifierNode
+
+class IllegalAssignmentError(variableNode: IdentifierNode) : H0Error() {
     init {
         super.type = ErrorType.RUNTIME
         super.name = "IllegalAssignmentError"
-        super.message = "Cannot assign value to '$variableName'"
+        super.message = "Cannot assign value to '${variableNode.identifier}'"
     }
 }
