@@ -13,38 +13,47 @@ var logger = Logger()
 
 class H0Process(args: ProgramArgs) {
     val options = args.options
-    val fileName = args.fileName
+    val fileName = args.filePath
     val h0Args = args.additionalArgs
 
-    var fileContent = ""
-        private set
+    // FileData and Interpreter class for the entry point file
+    val fileData: FileData
+    val mainRuntime: Interpreter
+
+    // FileData and Interpreter class for external loaded libraries
+    var loadedLibraries = mapOf<FileData, Interpreter>()
+
+    // Process initialization
+    init {
+
+        // Read .h0 file
+        if (fileName == "") {
+            logger.log("Please specify the file name to run", Logger.Log.ERROR)
+            exit(1)
+        }
+
+        // Set the fileData property and create the Interpreter class
+        fileData = FileData.from(fileName.toPath())
+        mainRuntime = Interpreter(fileData, args.options, args.additionalArgs)
+
+    }
+
     val rootPaths = mutableListOf<Path>()
 
     var timeStart = TimeSource.Monotonic.markNow()
-    var h0Runtime = Interpreter("", mapOf(), listOf())
-
-    var loadedFiles = mapOf<Path, Interpreter>()
 
     fun start() {
         handlePreInitOptions()
 
-        // Read .h0 file
-        if (fileName == "") return logger.log("Please specify the file name to run", Logger.Log.ERROR)
-
-        val filePath = fileName.toPath()
-        val fileExtension = filePath.name.substringAfterLast('.')
-        if (fileExtension != LANG_FILE_EXTENSION) logger.logln(
-            "Use recommended file extension '.h0', this is a requirement if you use '#FILE \"LIBRARY\"' on top of your file",
-            Logger.Log.WARNING
-        )
-
-        fileContent = FS.readFileContent(filePath)
+//        val fileExtension = filePath.name.substringAfterLast('.')
+//        if (fileExtension != LANG_FILE_EXTENSION) logger.logln(
+//            "Use recommended file extension '.h0', this is a requirement if you use '#FILE \"LIBRARY\"' on top of your file",
+//            Logger.Log.WARNING
+//        )
 
         // Run interpreter
         timeStart = TimeSource.Monotonic.markNow()
-
-        h0Runtime = Interpreter(fileContent, options, h0Args)
-        h0Runtime.run()
+        mainRuntime.run()
 
         // Exit process after execution
         exit(0)
@@ -87,11 +96,11 @@ class H0Process(args: ProgramArgs) {
 
 }
 
-data class ProgramArgs(val options: OptionMap, val fileName: String, val additionalArgs: List<String>) {
+data class ProgramArgs(val options: OptionMap, val filePath: String, val additionalArgs: List<String>) {
     companion object {
         fun from(args: Array<String>): ProgramArgs {
             val options = mutableMapOf<String, List<String>>()
-            var fileName = ""
+            var filePath = ""
             val additionalArgs = mutableListOf<String>()
 
             for (arg in args) {
@@ -111,13 +120,13 @@ data class ProgramArgs(val options: OptionMap, val fileName: String, val additio
                 }
 
                 // Parse file name (main.h0)
-                else if (fileName == "") fileName = arg
+                else if (filePath == "") filePath = arg
 
                 // Parse program arguments
                 else additionalArgs.add(arg)
             }
 
-            return ProgramArgs(options, fileName, additionalArgs)
+            return ProgramArgs(options, filePath, additionalArgs)
         }
     }
 }
