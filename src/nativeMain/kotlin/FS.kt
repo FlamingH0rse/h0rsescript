@@ -5,6 +5,17 @@ import okio.FileSystem
 import okio.IOException
 import okio.Path
 
+data class FileData(val path: Path, val content: String) {
+    val name = path.name
+    val absPath = FileSystem.SYSTEM.canonicalize(path)
+
+    companion object {
+        fun from(filePath: Path): FileData {
+            return FileData(filePath, FS.readFileContent(filePath))
+        }
+    }
+}
+
 object FS {
     fun readFileContent(filePath: Path): String {
         try {
