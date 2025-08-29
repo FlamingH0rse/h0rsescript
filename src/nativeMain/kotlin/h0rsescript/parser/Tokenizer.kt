@@ -4,7 +4,7 @@ import me.flaming.FS
 import me.flaming.h0rsescript.errors.InvalidTokenError
 import me.flaming.h0rsescript.runtime.ErrorHandler
 
-object Tokenizer {
+class Tokenizer(val errorHandler: ErrorHandler) {
 
     private var src = ""
     private var position = 0
@@ -45,7 +45,7 @@ object Tokenizer {
                 tokens.add(Token(TokenType.KEYWORD, getFromList(Token.keywords), position = startPos))
             }
 
-            // Handle keywords
+            // Handle file declaratives
             else if (char == Token.TAGPREFIX) {
                 tokens.add(Token(TokenType.TAG, getFromList(Token.tags), position = startPos))
             }
@@ -85,7 +85,7 @@ object Tokenizer {
 
             // Throw InvalidTokenError
             else {
-                ErrorHandler.report(InvalidTokenError(src[position], getLineCol(position).first, getLineCol(position).second))
+                errorHandler.report(InvalidTokenError(src[position]), position)
             }
         }
         if (clean) {
@@ -128,7 +128,7 @@ object Tokenizer {
             operatorValue = "-"
             position += 1
         } else {
-            ErrorHandler.report(InvalidTokenError(src[position], getLineCol(position).first, getLineCol(position).second))
+            errorHandler.report(InvalidTokenError(src[position]), position)
         }
 
         return operatorValue
@@ -154,9 +154,9 @@ object Tokenizer {
 
         // Ending double quote ", throw error if EOF
         if (endOfSrc()) {
-            val err = InvalidTokenError(src[startPos], getLineCol(startPos).first, getLineCol(startPos).second)
+            val err = InvalidTokenError(src[startPos])
             err.message += "\nUnterminated string literal"
-            ErrorHandler.report(err)
+            errorHandler.report(err, position)
         }
         position++
 
@@ -241,10 +241,10 @@ object Tokenizer {
 
         // Throw error if token is not in list
         if (str !in list) {
-            val err = InvalidTokenError(src[startPos], getLineCol(startPos).first, getLineCol(startPos).second)
+            val err = InvalidTokenError(src[startPos])
             err.message += "\nInvalid keyword '$str' used"
             err.message += "\nExpected one of the following:\n\t'${list.joinToString("\n\t")}'"
-            ErrorHandler.report(err)
+            errorHandler.report(err, position)
         }
 
         return str
