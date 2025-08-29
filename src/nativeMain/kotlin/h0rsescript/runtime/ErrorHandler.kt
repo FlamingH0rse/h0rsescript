@@ -8,7 +8,7 @@ import me.flaming.h0rsescript.errors.H0Error
 import me.flaming.logger
 
 class ErrorHandler internal constructor(val runtime: Interpreter) {
-    fun report(error: H0Error, at: Int = -1): Nothing {
+    fun report(error: H0Error, at: Int?): Nothing {
         // Add the file name and file path
         var message = "Error in ${runtime.fileData.name} (${runtime.fileData.absPath})\n"
 
@@ -16,7 +16,7 @@ class ErrorHandler internal constructor(val runtime: Interpreter) {
 
 
         // Add the line and column reference
-        if (at >= 0) {
+        if (at != null) {
             val lineColumnPair = FS.lineColumnFromPos(runtime.fileData.content, at)
             message += "at line ${lineColumnPair.first} column ${lineColumnPair.second}\n"
         }
