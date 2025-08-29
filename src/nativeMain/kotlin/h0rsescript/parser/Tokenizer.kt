@@ -25,12 +25,19 @@ object Tokenizer {
             // Handle identifiers, and booleans
             if (char.isLetter() || char == '_') {
                 val value = getIdentifier()
-                var tokenType = if (value.contains('.')) TokenType.QUALIFIED_IDENTIFIER else TokenType.IDENTIFIER
+                val tokenType =
+                    if (value.contains('.')) {
+                        TokenType.QUALIFIED_IDENTIFIER
+                    }
+                    // Handle booleans and identifiers
+                    else {
+                        if (value in Token.booleans)
+                            TokenType.BOOLEAN
+                        else
+                            TokenType.IDENTIFIER
+                    }
 
-                // Handle booleans
-                if (value in Token.booleans) tokenType = TokenType.BOOLEAN
-
-                tokens.add(Token(tokenType, value, position = startPos))
+                tokens.add(Token(tokenType, value, startPos))
             }
 
             // Handle keywords
@@ -197,19 +204,26 @@ object Tokenizer {
         var value = "${src[position]}"
         position++
 
-        var endOfIdent = false
-        while (!endOfIdent) {
-            // Get current character, except .
-            if (!endOfSrc() && isValidIdentChar(src[position])) {
+        var endOfIdentifier = false
+        while (!endOfIdentifier) {
+            // Get current character if valid, except .
+            if (!endOfSrc() && isValidIdentifierChar(src[position])) {
                 value += src[position]
                 position++
             }
+
             // Get . only if it is followed by another character
-            else if (!endOfSrc() && src[position] == '.' && (src.getOrNull(position + 1) != null && isValidIdentChar(src[position + 1]))) {
+            val currentChar = src.getOrNull(position)
+            var nextChar = src.getOrNull(position + 1)
+
+            if (!endOfSrc() && currentChar == '.' && nextChar != null && isValidIdentifierStartChar(nextChar)) {
                 value += src[position]
                 position++
             }
-            else endOfIdent = true
+
+            // Reached end of identifier
+            nextChar = src.getOrNull(position + 1)
+            if (nextChar == null || !isValidIdentifierChar(nextChar)) endOfIdentifier = true
         }
 
         return value
@@ -245,7 +259,8 @@ object Tokenizer {
         return comment
     }
 
-    private fun isValidIdentChar(char: Char) = char.isLetterOrDigit() || char == '_'
+    private fun isValidIdentifierChar(char: Char) = char.isLetterOrDigit() || char == '_'
+    private fun isValidIdentifierStartChar(char: Char) = char.isLetter() || char == '_'
 
     private fun endOfSrc() = position >= src.length
 
