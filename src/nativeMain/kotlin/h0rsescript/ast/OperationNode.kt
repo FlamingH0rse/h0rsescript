@@ -23,7 +23,7 @@ data class CreationNode(
     val value: ASTNode,
     override val operationType: OperationType,
 
-) : OperationNode(operationType) {
+    ) : OperationNode(operationType), StatementNode {
     companion object {
         val validTypes =
             listOf(OperationType.MUTABLE_CREATE, OperationType.IMMUTABLE_CREATE, OperationType.MODIFY_MUTABLE)
@@ -38,7 +38,7 @@ data class CreationNode(
 data class DeletionNode(
     val values: List<IdentifierNode>,
 
-) : OperationNode(OperationType.DELETE) {
+    ) : OperationNode(OperationType.DELETE), StatementNode {
     companion object {
         val validTypes = listOf(OperationType.DELETE)
     }
@@ -58,7 +58,7 @@ data class PipeExtractionNode(
     val pipe: PipeNode,
     val extractedBy: IdentifierNode,
 
-    ) : OperationNode(OperationType.EXTRACT_PIPE) {
+    ) : OperationNode(OperationType.EXTRACT_PIPE), StatementNode {
 
     companion object {
         val validTypes = listOf(OperationType.EXTRACT_PIPE)

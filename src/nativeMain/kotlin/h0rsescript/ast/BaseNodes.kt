@@ -4,4 +4,6 @@ interface ASTNode
 
 interface IdentifierOrLiteralNode : ASTNode
 
-typealias ParsedCode = List<ASTNode>
+interface StatementNode : ASTNode
+
+typealias ParsedCode = List<StatementNode>

@@ -7,7 +7,7 @@ import me.flaming.h0rsescript.runtime.ErrorHandler
 import me.flaming.logger
 
 class Parser(private val errorHandler: ErrorHandler) {
-    private val nodes: MutableList<ASTNode> = mutableListOf()
+    private val nodes: MutableList<StatementNode> = mutableListOf()
 
     private var pos = 0
     private var tokens: List<Token> = listOf()
@@ -28,7 +28,7 @@ class Parser(private val errorHandler: ErrorHandler) {
         return nodes
     }
 
-    private fun parseStatement(): ASTNode {
+    private fun parseStatement(): StatementNode {
         return when (currentToken()?.type) {
             TokenType.OPERATOR -> {
                 // Parse - operations
@@ -158,7 +158,7 @@ class Parser(private val errorHandler: ErrorHandler) {
             listOfKeywords.remove(key.identifier)
         }
 
-        val body = mutableListOf<ASTNode>()
+        val body = mutableListOf<StatementNode>()
         while (currentToken()?.value != "\$end") {
             val statement = parseStatement()
             body.add(statement)
@@ -243,7 +243,7 @@ class Parser(private val errorHandler: ErrorHandler) {
     }
 
     // Must be called when current token is an OPERATOR or IDENTIFIER
-    private fun getOperationNode(): OperationNode {
+    private fun getOperationNode(): StatementNode {
         check(currentToken()?.type in listOf(TokenType.OPERATOR, TokenType.IDENTIFIER))
 
         // When current token is OPERATOR, try to get a delete operation node (-var_name)

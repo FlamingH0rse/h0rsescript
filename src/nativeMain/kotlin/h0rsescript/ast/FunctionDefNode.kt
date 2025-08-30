@@ -5,4 +5,4 @@ data class FunctionDefNode(
     val options: Map<IdentifierNode, List<IdentifierNode>>,
     val body: ParsedCode,
 
-) : ASTNode
+    ) : ASTNode, StatementNode
