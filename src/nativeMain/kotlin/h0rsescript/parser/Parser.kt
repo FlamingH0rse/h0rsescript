@@ -21,6 +21,7 @@ class Parser(private val errorHandler: ErrorHandler) {
         this.options = options
 
         while (pos < tokens.size) {
+            if (currentToken()?.type == TokenType.EOF) break
             val parsedStatement = parseStatement()
             nodes.add(parsedStatement)
         }
@@ -92,7 +93,7 @@ class Parser(private val errorHandler: ErrorHandler) {
             }
 
             TokenType.TAG -> {
-                if (nodes.lastOrNull() !is DeclarativeNode) {
+                if (nodes.isNotEmpty() && nodes.last() !is DeclarativeNode) {
                     val error = UnexpectedTokenError(currentToken(), TokenType.IDENTIFIER, TokenType.KEYWORD)
                     error.message += "\nFile declaratives must be declared at the top of the file"
                     errorHandler.report(error, currentToken()?.position)
@@ -135,8 +136,8 @@ class Parser(private val errorHandler: ErrorHandler) {
         val options = mutableMapOf<IdentifierNode, List<IdentifierNode>>()
 
 
-        // Get list of valid keywords
-        val listOfKeywords = Token.keywords.toMutableList().filter { it != "\$define" }.toMutableList()
+        // Get list of valid keywords, all except $define and $end
+        val listOfKeywords = Token.keywords.filter { it != "\$define" && it != "\$end" }.toMutableList()
 
         // Parse function options ($expect, $include)
         while (currentToken()?.type == TokenType.KEYWORD) {

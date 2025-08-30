@@ -10,7 +10,7 @@ class Tokenizer(val errorHandler: ErrorHandler) {
     private var position = 0
 
     fun tokenize(rawContent: String, clean: Boolean = false): List<Token> {
-        src = rawContent
+        src = rawContent.trim()
         val tokens = mutableListOf<Token>()
 
         val consumeToken = { token: Token ->
@@ -150,11 +150,10 @@ class Tokenizer(val errorHandler: ErrorHandler) {
             position++
 
             // Handle escape sequences
-            if (src[position] == '\\') {
+            if (!endOfSrc() && src[position] == '\\') {
                 literalValue += src[position++]
             }
         }
-
         // Ending double quote ", throw error if EOF
         if (endOfSrc()) {
             val err = InvalidTokenError(src[startPos])
@@ -209,24 +208,23 @@ class Tokenizer(val errorHandler: ErrorHandler) {
 
         var endOfIdentifier = false
         while (!endOfIdentifier) {
+            val currentChar = src.getOrNull(position)
+            val nextChar = src.getOrNull(position + 1)
+
             // Get current character if valid, except .
-            if (!endOfSrc() && isValidIdentifierChar(src[position])) {
+            if (!endOfSrc() && isValidIdentifierChar(currentChar!!)) {
                 value += src[position]
                 position++
             }
 
             // Get . only if it is followed by another character
-            val currentChar = src.getOrNull(position)
-            var nextChar = src.getOrNull(position + 1)
-
-            if (!endOfSrc() && currentChar == '.' && nextChar != null && isValidIdentifierStartChar(nextChar)) {
+            else if (!endOfSrc() && currentChar == '.' && nextChar != null && isValidIdentifierStartChar(nextChar)) {
                 value += src[position]
                 position++
             }
 
             // Reached end of identifier
-            nextChar = src.getOrNull(position + 1)
-            if (nextChar == null || !isValidIdentifierChar(nextChar)) endOfIdentifier = true
+            else endOfIdentifier = true
         }
 
         return value
@@ -255,7 +253,7 @@ class Tokenizer(val errorHandler: ErrorHandler) {
 
     private fun getComment(): String {
         var comment = ""
-        while (endOfSrc() || src[position] != '\n') {
+        while (!endOfSrc() && src[position] != '\n') {
             comment += src[position]
             position++
         }

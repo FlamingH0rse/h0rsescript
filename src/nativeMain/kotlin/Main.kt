@@ -9,7 +9,7 @@ const val LANG_NAME_SHORT = "h0"
 const val LANG_FILE_EXTENSION = "h0"
 const val VERSION = "0.0.1"
 
-var h0Process = H0Process(ProgramArgs.from(arrayOf()))
+lateinit var h0Process: H0Process
 
 val optionsList = mapOf(
     "-version" to "Display current h0 version",
@@ -39,7 +39,7 @@ fun main(args: Array<String>) {
 
         // Parse arguments and start process
         val arguments = ProgramArgs.from(args)
-        val h0Process = H0Process(arguments)
+        h0Process = H0Process(arguments)
 
         h0Process.start()
 
