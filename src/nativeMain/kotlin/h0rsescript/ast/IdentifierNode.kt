@@ -10,8 +10,12 @@ data class IdentifierNode(
     ) : ASTNode, IdentifierOrLiteralNode {
     val identifier = token.value
 
+    var firstToken: Token
+        private set
+
     var tokens = listOf(token)
         private set
+
     var qualified = false
         private set
 
@@ -30,6 +34,6 @@ data class IdentifierNode(
 
             }
         }
-
+        firstToken = tokens.first()
     }
 }
