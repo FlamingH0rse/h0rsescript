@@ -88,6 +88,7 @@ enum class TokenType(val prettyName: String) {
     CLOSE_CURLY("closing curly bracket"),   // }
     COMMA("comma"),         // ,
 
-    COMMENT,       // Comments
     COMMENT(""),       // Comments
+
+    EOF("end of file")
 }

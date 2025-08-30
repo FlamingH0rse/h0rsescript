@@ -91,6 +91,9 @@ class Tokenizer(val errorHandler: ErrorHandler) {
         if (clean) {
             tokens.removeAll { t -> t.type == TokenType.COMMENT }
         }
+
+        // Add EOF token
+        tokens.add(Token(TokenType.EOF, "", position))
         return tokens
     }
 
