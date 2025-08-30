@@ -8,7 +8,7 @@ class UnexpectedTokenError(token: Token?, vararg expectedTypes: TokenType, expec
         super.type = ErrorType.SYNTAX
         super.name = "UnexpectedTokenError"
         super.message = "Unexpected token '${token?.value}' of type ${token?.type}, expected ${
-            expectedValue ?: expectedTypes.toList().joinToString(" or ")
+            expectedValue ?: expectedTypes.toList().joinToString(" or ") { it.prettyName }
         }"
     }
 }

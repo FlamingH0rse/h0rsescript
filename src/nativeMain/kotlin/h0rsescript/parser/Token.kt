@@ -70,22 +70,24 @@ data class Token(
     }
 }
 
-enum class TokenType {
-    IDENTIFIER,    // Variable or function names
-    QUALIFIED_IDENTIFIER, // Function signatures like math.add
-    KEYWORD,       // Keywords like $define, $end, etc.
-    TAG,           // Tags like #IMPORT, #EXPORT, #LIBRARY
-    OPERATOR,        // Symbols like ->, <->, etc.
+// TODO(Add pretty names while printing eg. OPEN_BRACKET to "Function call")
+enum class TokenType(val prettyName: String) {
+    IDENTIFIER("variable name"),    // Variable or function names
+    QUALIFIED_IDENTIFIER("function signature"), // Function signatures like math.add
+    KEYWORD("keyword"),       // Keywords like $define, $end, etc.
+    TAG("declarative tag"),           // Tags like #IMPORT, #EXPORT, #LIBRARY
+    OPERATOR("operator"),        // Symbols like ->, <->, etc.
 
-    STRING,        // String literals
-    NUMBER,        // Numeric literals
-    BOOLEAN,       // TRUE/FALSE
+    STRING("string"),        // String literals
+    NUMBER("number"),        // Numeric literals
+    BOOLEAN("boolean"),       // TRUE/FALSE
 
-    OPEN_BRACKET,  // [
-    CLOSE_BRACKET, // ]
-    OPEN_CURLY,    // {
-    CLOSE_CURLY,   // }
-    COMMA,         // ,
+    OPEN_BRACKET("function call"),  // [
+    CLOSE_BRACKET("closing square bracket"), // ]
+    OPEN_CURLY("open curly bracket"),    // {
+    CLOSE_CURLY("closing curly bracket"),   // }
+    COMMA("comma"),         // ,
 
     COMMENT,       // Comments
+    COMMENT(""),       // Comments
 }
