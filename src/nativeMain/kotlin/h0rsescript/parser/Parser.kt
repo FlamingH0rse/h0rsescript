@@ -6,9 +6,7 @@ import me.flaming.h0rsescript.errors.UnexpectedTokenError
 import me.flaming.h0rsescript.runtime.ErrorHandler
 import me.flaming.logger
 
-typealias ParsedCode = List<ASTNode>
-
-object Parser {
+class Parser(private val errorHandler: ErrorHandler) {
     private val nodes: MutableList<ASTNode> = mutableListOf()
 
     private var pos = 0
@@ -19,8 +17,8 @@ object Parser {
         listOf(TokenType.IDENTIFIER, TokenType.STRING, TokenType.NUMBER, TokenType.BOOLEAN, TokenType.OPEN_CURLY)
 
     fun parse(tokens: List<Token>, options: List<String>): ParsedCode {
-        Parser.tokens = tokens
-        Parser.options = options
+        this.tokens = tokens
+        this.options = options
 
         while (pos < tokens.size) {
             val parsedStatement = parseStatement()
@@ -37,7 +35,7 @@ object Parser {
                     return getOperationNode()
                 }
                 // Throw UnexpectedTokenError
-                ErrorHandler.report(UnexpectedTokenError(currentToken(), TokenType.IDENTIFIER, TokenType.KEYWORD))
+                errorHandler.report(UnexpectedTokenError(currentToken()), currentToken()?.position)
             }
 
             TokenType.IDENTIFIER -> {
@@ -50,12 +48,13 @@ object Parser {
 
                     else -> {
                         // Throw UnexpectedTokenError
-                        ErrorHandler.report(
+                        errorHandler.report(
                             UnexpectedTokenError(
                                 nextToken(),
                                 TokenType.OPEN_BRACKET,
                                 TokenType.OPERATOR
-                            )
+                            ),
+                            nextToken()?.position
                         )
                     }
                 }
@@ -67,7 +66,10 @@ object Parser {
                     TokenType.OPEN_BRACKET -> getFunctionCallNode()
                     else -> {
                         // Throw UnexpectedTokenError
-                        ErrorHandler.report(UnexpectedTokenError(nextToken(), TokenType.OPEN_BRACKET))
+                        errorHandler.report(
+                            UnexpectedTokenError(nextToken(), TokenType.OPEN_BRACKET),
+                            nextToken()?.position
+                        )
                     }
                 }
             }
@@ -83,17 +85,17 @@ object Parser {
                             TokenType.OPERATOR,
                             expectedValue = "\$define"
                         )
-                        error.message += "\nThis keyword must be enclosed within a \$define scope"
-                        ErrorHandler.report(error)
+                        error.message += "\nThis keyword must be enclosed within a '\$define - \$end' scope"
+                        errorHandler.report(error, currentToken()?.position)
                     }
                 }
             }
 
             TokenType.TAG -> {
-                if (nodes.isNotEmpty() && nodes.last() !is DeclarativeNode) {
+                if (nodes.lastOrNull() !is DeclarativeNode) {
                     val error = UnexpectedTokenError(currentToken(), TokenType.IDENTIFIER, TokenType.KEYWORD)
                     error.message += "\nFile declaratives must be declared at the top of the file"
-                    ErrorHandler.report(error)
+                    errorHandler.report(error, currentToken()?.position)
                 }
 
                 getDeclarativeNode()
@@ -101,32 +103,58 @@ object Parser {
             }
 
             else -> {
-                ErrorHandler.report(UnexpectedTokenError(currentToken(), TokenType.IDENTIFIER, TokenType.KEYWORD))
+                errorHandler.report(
+                    UnexpectedTokenError(currentToken(), TokenType.IDENTIFIER, TokenType.KEYWORD),
+                    currentToken()?.position
+                )
             }
         }
     }
 
+    // Syntax : #KEY "VALUE"
+    // Example : #IMPORT "math;.\libs\my-lib.h0;__native_http"
     private fun getDeclarativeNode(): DeclarativeNode {
+        require(currentToken()!!.type == TokenType.TAG)
         val name = consume(TokenType.TAG)
         val value = consume(TokenType.STRING)
 
-        return DeclarativeNode(name.value, LiteralNode.Str(value), listOf(name, value))
+        return DeclarativeNode(IdentifierNode(name), LiteralNode.Str(value))
     }
 
+    //
+    // Syntax : $define name
+    //          $keyword value
+    //          body
+    //          $end return_value
+    // TODO(Better error handling if multiple values in $define and $end keyword)
     private fun getFunctionDefNode(): FunctionDefNode {
-        val startPos = pos
-
-        // KEYWORD, IDENTIFIER, BODY, KEYWORD
+        require(currentToken()?.type == TokenType.KEYWORD)
         consume(TokenType.KEYWORD)
+
         val functionName = consume(TokenType.IDENTIFIER)
-        val options = mutableMapOf<String, List<String>>()
+        val options = mutableMapOf<IdentifierNode, List<IdentifierNode>>()
+
+
+        // Get list of valid keywords
+        val listOfKeywords = Token.keywords.toMutableList().filter { it != "\$define" }.toMutableList()
 
         // Parse function options ($expect, $include)
-        while (currentToken()?.type == TokenType.KEYWORD && currentToken()?.value !in listOf("\$define", "\$end")) {
-            val key = consume(TokenType.KEYWORD)
-            val values = getTokenInSeries(TokenType.IDENTIFIER, separatedBy = TokenType.COMMA).map { t -> t.value }
+        while (currentToken()?.type == TokenType.KEYWORD) {
+            // Throw UnexpectedTokenError if keyword is already defined once
+            if (currentToken()?.value !in listOfKeywords) {
+                val err = UnexpectedTokenError(currentToken())
+                err.message += "\nThis keyword is already defined once for function '${functionName.value}'"
+                errorHandler.report(err, currentToken()?.position)
+            }
 
-            options[key.value.removePrefix("$")] = values
+            val key = IdentifierNode(consume(TokenType.KEYWORD))
+            val values =
+                getTokenInSeries(TokenType.IDENTIFIER, separatedBy = TokenType.COMMA).map { IdentifierNode(it) }
+
+            options[key] = values
+
+            // Remove keyword from list once defined
+            listOfKeywords.remove(key.identifier)
         }
 
         val body = mutableListOf<ASTNode>()
@@ -141,56 +169,60 @@ object Parser {
 //                statement = FunctionReturnNode(getIdentifierOrLiteralNode(returnValue))
 //            } else statement = parseStatement()
         }
-        val endKeyword =
-            consume(TokenType.KEYWORD, valueToMatch = "\$end").value.removePrefix(Token.KEYWORDPREFIX.toString())
-        val result = consume(TokenType.IDENTIFIER)
 
-        options[endKeyword] = listOf(result.value)
+        val endKeyword = IdentifierNode(consume(TokenType.KEYWORD, valueToMatch = "\$end"))
 
-        if ("log-function-defines" in Parser.options) logger.logln(
+        val result = IdentifierNode(consume(TokenType.IDENTIFIER))
+
+        options[endKeyword] = listOf(result)
+
+        if ("log-function-defines" in this.options) logger.logln(
             "${functionName.value} $options\n" + body.map { "  $it" },
             Logger.Log.INFO
         )
-        return FunctionDefNode(functionName.value, options, body, tokensFrom(startPos))
+
+        return FunctionDefNode(IdentifierNode(functionName), options, body)
     }
 
+    // Syntax : my.function.signature [arg1, arg2, arg3, ...]
     private fun getFunctionCallNode(): FunctionCallNode {
-        val startPos = pos
-        // IDENTIFIER, OPEN_BRACKET, ...IDENTIFIER/STRING/NUMBER/BOOLEAN/ARRAY, CLOSE_BRACKET
+        check(currentToken()?.type in listOf(TokenType.QUALIFIED_IDENTIFIER, TokenType.IDENTIFIER))
 
         // Get function name
         val functionName = consume(TokenType.QUALIFIED_IDENTIFIER, TokenType.IDENTIFIER)
 
+
+        // Get '[', then arguments then ']'
         consume(TokenType.OPEN_BRACKET)
         val arguments: MutableList<ASTNode> = mutableListOf()
-
-        // Get arguments
         while (currentToken()?.type != TokenType.CLOSE_BRACKET) {
 
-            val argNode = getIdentifierOrLiteralNode()
+            val argNode = getIdentifierOrLiteralNode(allowQualified = true)
 
             if (currentToken()?.type != TokenType.CLOSE_BRACKET) consume(TokenType.COMMA)
             arguments.add(argNode)
         }
+        consume(TokenType.CLOSE_BRACKET)
 
         if ("log-function-calls" in options) logger.logln("${functionName.value} $arguments", Logger.Log.INFO)
 
-        consume(TokenType.CLOSE_BRACKET)
-
-        return FunctionCallNode(functionName.value, arguments.toList(), tokensFrom(startPos))
+        return FunctionCallNode(IdentifierNode(functionName), arguments.toList())
     }
 
-    private fun getIdentifierOrLiteralNode(): IdentifierOrLiteralNode {
-        val startPos = pos
+    private fun getIdentifierOrLiteralNode(allowQualified: Boolean = false): IdentifierOrLiteralNode {
         val tokensList = mutableListOf<Token>()
 
         // Try to consume valid tokens
-        val first = consume(*identifierOrLiteralStartTokens.toTypedArray())
+        val validTokens = identifierOrLiteralStartTokens.toMutableList()
+        if (allowQualified) validTokens.add(TokenType.QUALIFIED_IDENTIFIER)
+
+        val first = consume(*validTokens.toTypedArray())
 
         tokensList.add(first)
 
         return when (first.type) {
             TokenType.IDENTIFIER -> IdentifierNode(first)
+            TokenType.QUALIFIED_IDENTIFIER -> IdentifierNode(first)
             TokenType.STRING -> LiteralNode.Str(first)
             TokenType.NUMBER -> LiteralNode.Num(first)
             TokenType.BOOLEAN -> LiteralNode.Bool(first)
@@ -203,17 +235,15 @@ object Parser {
                 }
                 consume(TokenType.CLOSE_CURLY)
 
-                LiteralNode.Array(tokensFrom(startPos), arrayMembers)
+                LiteralNode.Array(arrayMembers)
             }
-
             else -> throw IllegalStateException("Invalid Token type found while parsing: ${first.type}")
         }
     }
 
-
     // Must be called when current token is an OPERATOR or IDENTIFIER
     private fun getOperationNode(): OperationNode {
-        val startPos = pos
+        check(currentToken()?.type in listOf(TokenType.OPERATOR, TokenType.IDENTIFIER))
 
         // When current token is OPERATOR, try to get a delete operation node (-var_name)
         if (currentToken()?.type == TokenType.OPERATOR && currentToken()?.value == Token.operatorMap[OperationType.DELETE]) {
@@ -222,7 +252,7 @@ object Parser {
             val deletionNodes = getTokenInSeries(TokenType.IDENTIFIER, separatedBy = TokenType.COMMA)
                 .map { t -> IdentifierNode(t) }
 
-            return DeletionNode(deletionNodes, tokensFrom(startPos))
+            return DeletionNode(deletionNodes)
         }
 
         // Handle other operations
@@ -237,23 +267,21 @@ object Parser {
                 in CreationNode.validTypes -> {
                     val value: ASTNode
 
-
-                    // Pipe node
+                    // If next token is a pipe operator or extraction operator
                     if (
                         nextToken()?.type == TokenType.OPERATOR &&
                         Token.getOperatorType(nextToken()?.value ?: "") in PipeNode.validTypes
                     ) {
-
                         value = getOperationNode()
                     }
 
                     // Function call node
-                    // This will error if the next token is not a OPEN_BRACKET
+                    // This will error if the next token is not an OPEN_BRACKET
                     else {
                         value = getFunctionCallNode()
                     }
-                    return CreationNode(name.value, value, operationType, tokensFrom(startPos))
 
+                    return CreationNode(IdentifierNode(name), value, operationType)
                 }
 
                 // Handle pipes
@@ -280,20 +308,22 @@ object Parser {
                         else consume(TokenType.OPERATOR, valueToMatch = insertPipeSymbol)
                     }
 
-                    val pipeNode = PipeNode(pipeContent, tokensFrom(startPos))
+                    val pipeNode = PipeNode(pipeContent)
 
                     // Consume pipe extraction
                     consume(TokenType.OPERATOR, valueToMatch = extractPipeSymbol)
 
-                    val nameToken = consume(TokenType.IDENTIFIER, TokenType.QUALIFIED_IDENTIFIER)
-                    val extractedBy = IdentifierNode(nameToken)
+                    val extractedBy = IdentifierNode(consume(TokenType.IDENTIFIER, TokenType.QUALIFIED_IDENTIFIER))
 
-                    return PipeExtractionNode(pipeNode, extractedBy, tokensFrom(startPos))
+                    return PipeExtractionNode(pipeNode, extractedBy)
                 }
 
                 // Handle unexpected delete operator use
                 else -> {
-                    ErrorHandler.report(UnexpectedTokenError(operator, expectedValue = "Non-DELETION operator"))
+                    errorHandler.report(
+                        UnexpectedTokenError(operator, expectedValue = "Non-DELETION operator"),
+                        operator.position
+                    )
                 }
             }
         }
@@ -310,14 +340,17 @@ object Parser {
         if (current != null && current.type in types) {
             if (valueToMatch != null && current.value != valueToMatch) {
                 // Throw UnexpectedTokenError
-                ErrorHandler.report(UnexpectedTokenError(current, *types, expectedValue = valueToMatch))
+                errorHandler.report(
+                    UnexpectedTokenError(current, *types, expectedValue = valueToMatch),
+                    current.position
+                )
             }
             pos++
             return current
         }
 
         // Throw UnexpectedTokenError
-        ErrorHandler.report(UnexpectedTokenError(current, *types))
+        errorHandler.report(UnexpectedTokenError(current, *types), current?.position)
     }
 
     private fun getTokenInSeries(
