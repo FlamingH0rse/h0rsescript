@@ -3,7 +3,8 @@ package me.flaming.h0rsescript.runtime
 import me.flaming.h0rsescript.errors.TypeError
 
 abstract class NativeLibrary {
-    abstract val methods: Map<String, Method>
+    open val methods = mapOf<String, Method>()
+    open val subLibraries = mapOf<String, NativeLibrary>()
 
     fun hasMethod(name: String): Boolean = name in methods
     fun executeMethod(name: String, arguments: List<H0Type>): H0Type {
@@ -17,7 +18,7 @@ abstract class NativeLibrary {
         for ((type, parameter) in parametersMap) {
             if (!type.isInstance(parameter)) {
                 // Throw TypeError
-                ErrorHandler.report(TypeError(parameter.toString(), parameter::class, type))
+//                ErrorHandler.report(TypeError(parameter.toString(), parameter::class, type))
             }
         }
 

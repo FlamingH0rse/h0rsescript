@@ -9,7 +9,7 @@ data class Token(
 ) {
     companion object {
         const val TAGPREFIX = '#'
-        val tags = listOf("IMPORT", "FILE", "MODE", "EXPORT").map { t -> "$TAGPREFIX$t" }
+        val tags = listOf("IMPORT", "FILE", "NAME", "VERSION", "ENTRY", "MODE", "EXPORT").map { t -> "$TAGPREFIX$t" }
         const val KEYWORDPREFIX = '$'
         val keywords = listOf("define", "expect", "include", "end").map { k -> "$KEYWORDPREFIX$k" }
         val booleans = listOf("TRUE", "FALSE")
@@ -72,23 +72,23 @@ data class Token(
 
 // TODO(Add pretty names while printing eg. OPEN_BRACKET to "Function call")
 enum class TokenType(val prettyName: String) {
-    IDENTIFIER("variable name"),    // Variable or function names
+    IDENTIFIER("variable name"),                // Variable or function names
     QUALIFIED_IDENTIFIER("function signature"), // Function signatures like math.add
-    KEYWORD("keyword"),       // Keywords like $define, $end, etc.
-    TAG("declarative tag"),           // Tags like #IMPORT, #EXPORT, #LIBRARY
-    OPERATOR("operator"),        // Symbols like ->, <->, etc.
+    KEYWORD("keyword"),                         // Keywords like $define, $end, etc.
+    TAG("declarative tag"),                     // Tags like #IMPORT, #EXPORT, #LIBRARY
+    OPERATOR("operator"),                       // Symbols like ->, <->, etc.
 
-    STRING("string"),        // String literals
-    NUMBER("number"),        // Numeric literals
-    BOOLEAN("boolean"),       // TRUE/FALSE
+    STRING("string"),                           // String literals
+    NUMBER("number"),                           // Numeric literals
+    BOOLEAN("boolean"),                         // TRUE/FALSE
 
-    OPEN_BRACKET("function call"),  // [
-    CLOSE_BRACKET("closing square bracket"), // ]
-    OPEN_CURLY("open curly bracket"),    // {
-    CLOSE_CURLY("closing curly bracket"),   // }
-    COMMA("comma"),         // ,
+    OPEN_BRACKET("function call"),              // [
+    CLOSE_BRACKET("closing square bracket"),    // ]
+    OPEN_CURLY("open curly bracket"),           // {
+    CLOSE_CURLY("closing curly bracket"),       // }
+    COMMA("comma"),                             // ,
 
-    COMMENT(""),       // Comments
+    COMMENT(""),                                // Comments
 
     EOF("end of file")
 }

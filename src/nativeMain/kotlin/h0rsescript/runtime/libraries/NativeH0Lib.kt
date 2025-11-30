@@ -5,7 +5,9 @@ import me.flaming.h0rsescript.runtime.H0Type
 import me.flaming.h0rsescript.runtime.Method
 import me.flaming.h0rsescript.runtime.NativeLibrary
 
-object RootNamespace : NativeLibrary() {
+object NativeH0Lib : NativeLibrary() {
+    override val subLibraries = mapOf<String, NativeLibrary>()
+
     override val methods: Map<String, Method> = mapOf(
         "data" to Method (H0Type::class, runnable = { args -> args[0] }),
         "type" to Method (H0Type::class, runnable = { args -> args[0]::class.simpleName}),

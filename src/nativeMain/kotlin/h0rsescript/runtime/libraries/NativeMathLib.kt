@@ -1,7 +1,5 @@
 package me.flaming.h0rsescript.runtime.libraries
 
-import me.flaming.h0rsescript.errors.ArithmeticError
-import me.flaming.h0rsescript.runtime.ErrorHandler
 import me.flaming.h0rsescript.runtime.H0Type
 import me.flaming.h0rsescript.runtime.Method
 import me.flaming.h0rsescript.runtime.NativeLibrary
@@ -9,7 +7,7 @@ import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-object MathNamespace : NativeLibrary() {
+object NativeMathLib : NativeLibrary() {
     override val methods: Map<String, Method> = mapOf(
         "add" to Method(H0Type.NUM::class, H0Type.NUM::class) { args ->
             val a = (args[0] as H0Type.NUM).value
@@ -30,7 +28,7 @@ object MathNamespace : NativeLibrary() {
             val a = (args[0] as H0Type.NUM).value
             val b = (args[1] as H0Type.NUM).value
             if (b == 0.0) {
-                ErrorHandler.report(ArithmeticError("Division by zero"))
+//                ErrorHandler.report(ArithmeticError("Division by zero"))
             }
             a / b
         },
@@ -42,7 +40,7 @@ object MathNamespace : NativeLibrary() {
         "sqrt" to Method(H0Type.NUM::class) { args ->
             val value = (args[0] as H0Type.NUM).value
             if (value < 0) {
-                ErrorHandler.report(ArithmeticError("Square root of a negative number"))
+//                ErrorHandler.report(ArithmeticError("Square root of a negative number"))
             }
             sqrt(value)
         },

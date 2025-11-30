@@ -36,4 +36,14 @@ data class IdentifierNode(
         }
         firstToken = tokens.first()
     }
+
+    companion object {
+        fun isValidSyntax(str: String): Boolean {
+            val pattern = "^[a-zA-Z_][a-zA-Z0-9_]*$".toRegex()
+            return pattern.matches(str)
+        }
+        fun convertToValid(str: String): String {
+            return "_"
+        }
+    }
 }

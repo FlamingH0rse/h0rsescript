@@ -16,7 +16,7 @@ object ArrayNamespace : NativeLibrary() {
             val array = (args[0] as H0Type.ARRAY).elements
             val index = (args[1] as H0Type.NUM).value.toInt()
             if (index < 0 || index >= array.size) {
-                ErrorHandler.report(IndexOutOfBoundsError(index, array.size))
+//                ErrorHandler.report(IndexOutOfBoundsError(index, array.size))
             }
             array[index]
         },
@@ -24,7 +24,7 @@ object ArrayNamespace : NativeLibrary() {
             val array = (args[0] as H0Type.ARRAY).elements.toMutableList()
             val index = (args[1] as H0Type.NUM).value.toInt()
             if (index < 0 || index >= array.size) {
-                ErrorHandler.report(IndexOutOfBoundsError(index, array.size))
+//                ErrorHandler.report(IndexOutOfBoundsError(index, array.size))
             }
             array[index] = (args[2])
             (args[0] as H0Type.ARRAY).elements = array
@@ -39,7 +39,7 @@ object ArrayNamespace : NativeLibrary() {
         "pop" to Method(H0Type.ARRAY::class) { args ->
             val array = (args[0] as H0Type.ARRAY).elements.toMutableList()
             if (array.isEmpty()) {
-                ErrorHandler.report(IndexOutOfBoundsError(-1, array.size))
+//                ErrorHandler.report(IndexOutOfBoundsError(-1, array.size))
             }
             val output = array.removeLast()
             (args[0] as H0Type.ARRAY).elements = array

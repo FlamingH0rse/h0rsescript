@@ -1,0 +1,11 @@
+#IMPORT ".\math.h0"
+
+$define main
+$include math
+$expect argc, argv
+
+    my_var -> math.pi
+    my_age -> math.double_pi
+
+
+$end NULL

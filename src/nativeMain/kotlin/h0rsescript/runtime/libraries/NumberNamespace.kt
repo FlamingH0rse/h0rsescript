@@ -13,7 +13,7 @@ object NumberNamespace : NativeLibrary() {
             try {
                 return@Method str.toDouble()
             } catch (e: NumberFormatException) {
-                ErrorHandler.report(ParsingError(str, H0Type.NUM::class))
+//                ErrorHandler.report(ParsingError(str, H0Type.NUM::class))
             }
         }
     )
