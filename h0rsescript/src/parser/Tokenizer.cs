@@ -6,7 +6,8 @@
         private static string Src = "";
         private static int Pos = 0;
         private static List<Token> Tokens = [];
-
+        
+        // Helper properties
         private static char Current
         {
             get => Src[Pos];
@@ -31,7 +32,7 @@
             { "TRUE", "FALSE" };
 
         // Consume token
-        private static void Consume(Func<char?> getTokenValue, TokenType tokenType, char? lastValidToken = null)
+        private static void Consume(Func<char?> getTokenValue, TokenType tokenType, char? lastTokenToValidate = null)
         {
             int startPos = Pos;
             // Consume current character and move on
@@ -45,10 +46,14 @@
                 Pos++;
             }
             // Consume last character if it matches lastValidToken
-            if (lastValidToken != null && Current == lastValidToken)
+            if (!IsEOF() && lastTokenToValidate != null && Current == lastTokenToValidate)
             {
                 val += Current;
                 Pos++;
+            } else
+            {
+                // Throw Error
+                // "Unexpected EOF at position {Pos-1}, where {lastValidToken} was expected"
             }
 
             Tokens.Add(new Token(Src, val, startPos, tokenType));
@@ -63,8 +68,8 @@
             if (!validValues.Contains(Tokens.Last().Val))
             {
                 // THROW ERROR
-                Console.WriteLine("WEEWOO1");
-
+                Console.WriteLine($"WEEWOO1 {Tokens.Last().Val} at {Tokens.Last().Pos}");
+                
             }
         }
 
@@ -74,6 +79,7 @@
             Src = Str;
             while (!IsEOF())
             {
+                // Identifiers, Booleans and Qualified Identifiers
                 if (char.IsLetter(Current) || Current == '_')
                 {
                     Consume(GetIdentifier, TokenType.IDENTIFIER);
@@ -90,22 +96,27 @@
                         Tokens[^1] = qIdentifierToken;
                     }
                 }
-                else if (Current == KeywordPrefix)
-                {
-                    ConsumeAndValidate(GetIdentifier, TokenType.KEYWORD, Keywords);
-                }
-                else if (Current == '<' || Current == '-' || Current == '>')
-                {
-                    ConsumeAndValidate(GetAssignmentOperator, TokenType.ASSIGNMENT_OPERATOR, AssignmentOperators);
-                }
+                // String Literal
                 else if (Current == '"')
                 {
                     Consume(GetStringLiteral, TokenType.STRING, '"');
                 }
-                else if (char.IsDigit(Current) || Current == '-')
+                // Number Literal
+                else if (char.IsDigit(Current) || Current == '-' && char.IsDigit(Next.GetValueOrDefault()))
                 {
                     Consume(GetNumberLiteral, TokenType.NUMBER);
                 }
+                // Keywords
+                else if (Current == KeywordPrefix)
+                {
+                    ConsumeAndValidate(GetIdentifier, TokenType.KEYWORD, Keywords);
+                }
+                // Assignment Operators
+                else if (Current == '<' || Current == '-' || Current == '>')
+                {
+                    ConsumeAndValidate(GetAssignmentOperator, TokenType.ASSIGNMENT_OPERATOR, AssignmentOperators);
+                }
+                // Brackets & Commas
                 else if (Current == '[')
                 {
                     Consume(GetNull, TokenType.OPEN_BRACKET);
@@ -126,6 +137,7 @@
                 {
                     Consume(GetNull, TokenType.COMMA);
                 }
+                // Whitespace
                 else if (char.IsWhiteSpace(Current))
                 {
                     Pos++;
@@ -136,7 +148,6 @@
                 {
                     Consume(GetComment, TokenType.COMMENT);
                 }
-
                 else
                 {
                     // Throw InvalidTokenError TODO
@@ -146,7 +157,7 @@
             return Tokens;
         }
 
-        // Token helper functions
+        // Token helper functions return the current char/null if a certain condition is true/false
 
         // Identifier : Returns all characters that matches the regex [a-zA-Z0-9_]
         private static char? GetIdentifier()
