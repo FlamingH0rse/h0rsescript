@@ -134,3 +134,6 @@ _NCrunch*
 
 # Visual Studio settings
 .vs/
+
+# Testing code files
+examples/test.h0
