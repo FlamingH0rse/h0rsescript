@@ -30,9 +30,11 @@ namespace h0rsescript
                     return;
                 }
                 string src = File.ReadAllText(args[0]);
+                var watch = System.Diagnostics.Stopwatch.StartNew();
                 var tokens = Tokenizer.Tokenize(src);
+                watch.Stop();
 
-                tokens.ForEach(t => Console.WriteLine(t));
+                Console.WriteLine($"No. of Tokens {tokens.Count}, {watch.ElapsedMilliseconds}ms");
             }
         }
     }
